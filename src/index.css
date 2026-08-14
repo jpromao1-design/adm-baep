@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --primary: 221 83% 40%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 40%;
+  --accent: 210 40% 96%;
+  --border: 214 32% 91%;
+  --destructive: 0 72% 51%;
+}
+
+* {
+  @apply border-border;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
+body {
+  @apply bg-background text-foreground;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+button,
+a,
+[role='button'] {
+  min-height: 44px;
+}
+
+@media (min-width: 768px) {
+  button.icon-btn,
+  a.icon-btn {
+    min-height: 0;
+  }
+}
