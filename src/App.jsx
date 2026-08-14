@@ -10,7 +10,7 @@ import Tasks from '@/pages/Tasks';
 import CalendarPage from '@/pages/CalendarPage';
 import SearchPage from '@/pages/SearchPage';
 import Login from '@/pages/Login';
-import PageNotFound from '@/pages/PageNotFound';
+import { InstallPWA } from '@/components/layout/InstallPWA';
 
 function AuthenticatedApp() {
   const { isLoadingAuth, isAuthenticated, authError } = useAuth();
@@ -58,6 +58,7 @@ export default function App() {
           <AuthenticatedApp />
         </BrowserRouter>
         <Toaster />
+        <InstallPWA />
       </QueryClientProvider>
     </AuthProvider>
   );
