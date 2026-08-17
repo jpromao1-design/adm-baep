@@ -15,7 +15,13 @@ function isIos() {
 export function InstallPWA() {
   const [deferred, setDeferred] = useState(null);
   const [iosHint, setIosHint] = useState(false);
-  const [hidden, setHidden] = useState(() => localStorage.getItem('pwa-install-dismissed') === '1');
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem('pwa-install-dismissed') === '1';
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     if (isStandalone()) return undefined;
@@ -32,7 +38,11 @@ export function InstallPWA() {
   if (!deferred && !iosHint) return null;
 
   const dismiss = () => {
-    localStorage.setItem('pwa-install-dismissed', '1');
+    try {
+      localStorage.setItem('pwa-install-dismissed', '1');
+    } catch {
+      /* ignore */
+    }
     setHidden(true);
   };
 

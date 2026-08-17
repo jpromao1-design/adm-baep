@@ -10,7 +10,9 @@ import Tasks from '@/pages/Tasks';
 import CalendarPage from '@/pages/CalendarPage';
 import SearchPage from '@/pages/SearchPage';
 import Login from '@/pages/Login';
+import PageNotFound from '@/pages/PageNotFound';
 import { InstallPWA } from '@/components/layout/InstallPWA';
+import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 
 function AuthenticatedApp() {
   const { isLoadingAuth, isAuthenticated, authError } = useAuth();
@@ -52,14 +54,16 @@ function AuthenticatedApp() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <AuthenticatedApp />
-        </BrowserRouter>
-        <Toaster />
-        <InstallPWA />
-      </QueryClientProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <AuthenticatedApp />
+          </BrowserRouter>
+          <Toaster />
+          <InstallPWA />
+        </QueryClientProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
