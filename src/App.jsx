@@ -10,12 +10,13 @@ import Tasks from '@/pages/Tasks';
 import CalendarPage from '@/pages/CalendarPage';
 import SearchPage from '@/pages/SearchPage';
 import Login from '@/pages/Login';
+import ChangePassword from '@/pages/ChangePassword';
 import PageNotFound from '@/pages/PageNotFound';
 import { InstallPWA } from '@/components/layout/InstallPWA';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 
 function AuthenticatedApp() {
-  const { isLoadingAuth, isAuthenticated, authError } = useAuth();
+  const { isLoadingAuth, isAuthenticated, authError, mustChangePassword } = useAuth();
 
   if (isLoadingAuth) {
     return (
@@ -38,6 +39,15 @@ function AuthenticatedApp() {
     return <Login />;
   }
 
+  if (mustChangePassword) {
+    return (
+      <Routes>
+        <Route path="/alterar-senha" element={<ChangePassword forced />} />
+        <Route path="*" element={<Navigate to="/alterar-senha" replace />} />
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
       <Route element={<AppLayout />}>
@@ -45,6 +55,7 @@ function AuthenticatedApp() {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/alterar-senha" element={<ChangePassword />} />
       </Route>
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="*" element={<PageNotFound />} />

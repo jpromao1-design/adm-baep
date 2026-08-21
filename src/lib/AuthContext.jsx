@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/api/supabaseClient';
+import { changePassword as updatePassword, isDefaultInitialPassword, requirePasswordChange } from '@/api/auth';
 
 const AuthContext = createContext(null);
 
@@ -8,39 +9,51 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const forcePasswordChangeRef = useRef(false);
 
-  useEffect(() => {
-    let mounted = true;
+  const loadProfile = useCallback(async (user) => {
+    if (!user) {
+      forcePasswordChangeRef.current = false;
+      setProfile(null);
+      setAuthError(null);
+      return;
+    }
+    let { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, display_name, role, must_change_password')
+      .eq('id', user.id)
+      .maybeSingle();
 
-    async function loadProfile(user) {
-      if (!user) {
-        if (mounted) {
-          setProfile(null);
-          setAuthError(null);
-        }
-        return;
-      }
-      const { data, error } = await supabase
+    if (error && (error.code === '42703' || /must_change_password/i.test(error.message || ''))) {
+      const fallback = await supabase
         .from('profiles')
         .select('id, email, display_name, role')
         .eq('id', user.id)
         .maybeSingle();
-
-      if (!mounted) return;
-      if (error) {
-        setAuthError({ type: 'profile_error', message: error.message });
-        setProfile(null);
-        return;
-      }
-      if (!data) {
-        setAuthError({ type: 'user_not_registered' });
-        setProfile(null);
-        await supabase.auth.signOut();
-        return;
-      }
-      setAuthError(null);
-      setProfile(data);
+      data = fallback.data ? { ...fallback.data, must_change_password: false } : null;
+      error = fallback.error;
     }
+
+    if (error) {
+      setAuthError({ type: 'profile_error', message: error.message });
+      setProfile(null);
+      return;
+    }
+    if (!data) {
+      setAuthError({ type: 'user_not_registered' });
+      setProfile(null);
+      await supabase.auth.signOut();
+      return;
+    }
+    setAuthError(null);
+    setProfile({
+      ...data,
+      must_change_password: Boolean(data.must_change_password) || forcePasswordChangeRef.current,
+    });
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
 
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
@@ -59,7 +72,30 @@ export function AuthProvider({ children }) {
       mounted = false;
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [loadProfile]);
+
+  const signIn = useCallback(async (email, password) => {
+    const result = await supabase.auth.signInWithPassword({ email, password });
+    if (result.error) return result;
+    forcePasswordChangeRef.current = isDefaultInitialPassword(password);
+    if (forcePasswordChangeRef.current) {
+      try {
+        await requirePasswordChange();
+      } catch {
+        // RPC disponível após migration-password-change.sql
+      }
+    }
+    await loadProfile(result.data.user);
+    return result;
+  }, [loadProfile]);
+
+  const changePassword = useCallback(async (payload) => {
+    const result = await updatePassword(payload);
+    forcePasswordChangeRef.current = false;
+    const { data } = await supabase.auth.getUser();
+    await loadProfile(data.user);
+    return result;
+  }, [loadProfile]);
 
   const value = useMemo(
     () => ({
@@ -70,10 +106,12 @@ export function AuthProvider({ children }) {
       isLoadingPublicSettings: false,
       authError,
       isAuthenticated: Boolean(session?.user && profile),
-      signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
+      mustChangePassword: Boolean(profile?.must_change_password),
+      signIn,
       signOut: () => supabase.auth.signOut(),
+      changePassword,
     }),
-    [session, profile, isLoadingAuth, authError]
+    [session, profile, isLoadingAuth, authError, signIn, changePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

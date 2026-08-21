@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { CalendarDays, LayoutDashboard, ListTodo, LogOut, Plus, Search } from 'lucide-react';
+import { CalendarDays, KeyRound, LayoutDashboard, ListTodo, LogOut, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -18,6 +18,21 @@ export function AppLayout() {
   return (
     <div className="min-h-dvh bg-background font-inter">
       <main className="pb-28 md:pb-8 md:pl-72">
+        <div className="md:hidden flex items-center justify-end gap-1 px-4 pt-3">
+          <Link
+            to="/alterar-senha"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted min-h-11"
+          >
+            <KeyRound className="w-4 h-4" /> Senha
+          </Link>
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/5 min-h-11"
+          >
+            <LogOut className="w-4 h-4" /> Sair
+          </button>
+        </div>
         <Outlet />
       </main>
 
@@ -62,10 +77,21 @@ export function AppLayout() {
           >
             <Plus className="w-4 h-4 stroke-[2.5]" /> Nova Tarefa
           </Link>
+          <Link
+            to="/alterar-senha"
+            className={cn(
+              'flex items-center justify-center gap-2 w-full py-3 mt-2 text-sm font-medium rounded-2xl transition-all',
+              location.pathname === '/alterar-senha'
+                ? 'bg-secondary text-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+            )}
+          >
+            <KeyRound className="w-4 h-4" /> Alterar senha
+          </Link>
           <button
             type="button"
             onClick={() => signOut()}
-            className="flex items-center justify-center gap-2 w-full py-3 mt-2 text-sm font-medium text-muted-foreground hover:text-destructive rounded-2xl hover:bg-destructive/5 transition-all"
+            className="flex items-center justify-center gap-2 w-full py-3 mt-1 text-sm font-medium text-muted-foreground hover:text-destructive rounded-2xl hover:bg-destructive/5 transition-all"
           >
             <LogOut className="w-4 h-4" /> Sair
           </button>

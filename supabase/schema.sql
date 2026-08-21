@@ -37,6 +37,7 @@ create table if not exists public.profiles (
   display_name text,
   role text not null default 'auxiliar'
        check (role in ('admin', 'auxiliar')),
+  must_change_password boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -289,3 +290,17 @@ grant select on public.profiles to authenticated;
 grant select, insert, update, delete on public.tasks to authenticated;
 grant execute on function public.expand_task_occurrences(date, date) to authenticated;
 grant execute on function public.is_allowed_user() to authenticated;
+
+create or replace function public.set_must_change_password(p_required boolean)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.profiles
+  set must_change_password = coalesce(p_required, false)
+  where id = auth.uid();
+$$;
+
+revoke all on function public.set_must_change_password(boolean) from public;
+grant execute on function public.set_must_change_password(boolean) to authenticated;
