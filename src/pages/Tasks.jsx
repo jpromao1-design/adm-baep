@@ -124,7 +124,7 @@ export default function Tasks() {
       )}
 
       <TaskViewModal open={modals.viewModalOpen} onClose={modals.closeView} task={modals.selectedTask} onEdit={modals.openEdit} onDelete={handleDelete} />
-      <TaskFormModal open={modals.modalOpen} onClose={modals.closeForm} task={modals.selectedTask} onSave={handleSave} onDelete={handleDelete} />
+      <TaskFormModal open={modals.modalOpen} onClose={modals.closeForm} task={modals.selectedTask} onSave={(row) => handleSave(row)} onDelete={handleDelete} />
     </div>
   );
 }

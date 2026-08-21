@@ -13,7 +13,7 @@ export function useTasks(limit = 500) {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['tasks'] });
 
   const createMutation = useMutation({
-    mutationFn: createTask,
+    mutationFn: (row) => createTask(row),
     onSuccess: invalidate,
     onError: (err) => toast({ title: 'Erro ao criar', description: err.message, tone: 'danger' }),
   });
@@ -31,11 +31,8 @@ export function useTasks(limit = 500) {
   });
 
   const handleSave = async (form) => {
-    if (!form || typeof form !== 'object' || typeof form.preventDefault === 'function' || form.nativeEvent) {
-      return;
-    }
     const data = stripMeta(form);
-    if (typeof form.id === 'string' && form.id) {
+    if (typeof form?.id === 'string' && form.id) {
       await updateMutation.mutateAsync({ id: form.id, data });
     } else {
       await createMutation.mutateAsync(data);

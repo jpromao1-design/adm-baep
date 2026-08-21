@@ -160,7 +160,7 @@ export default function CalendarPage() {
         open={modals.modalOpen}
         onClose={modals.closeForm}
         task={modals.selectedTask}
-        onSave={handleSave}
+        onSave={(row) => handleSave(row)}
         onDelete={handleDelete}
       />
     </div>

@@ -75,16 +75,14 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const submit = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!form.title.trim()) return;
+  const saveRecord = async () => {
+    if (!String(form.title || '').trim()) return;
     setSaving(true);
     try {
       const payload = {
-        id: form.id || undefined,
-        title: form.title.trim(),
-        description: form.description || null,
+        id: typeof form.id === 'string' ? form.id : undefined,
+        title: String(form.title || '').trim(),
+        description: String(form.description || '').trim(),
         type: form.type,
         status: form.status,
         section: form.section || null,
@@ -94,10 +92,10 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
         end_date: form.end_date || null,
         event_date: isEvent ? form.event_date || null : null,
         event_time: isEvent ? form.event_time || null : null,
-        location: form.location || null,
-        auxiliar: String(form.auxiliar || '').trim() || null,
-        notes: form.notes || null,
-        observations: form.observations || null,
+        location: String(form.location || '').trim(),
+        auxiliar: String(form.auxiliar || '').trim(),
+        notes: String(form.notes || '').trim(),
+        observations: String(form.observations || '').trim(),
         remind_on_day: Boolean(form.remind_on_day),
         remind_day_before: Boolean(form.remind_day_before),
         is_recurring: Boolean(form.is_recurring),
@@ -121,12 +119,19 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
           exit={{ opacity: 0 }}
         >
           <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="Fechar" />
-          <motion.form
-            onSubmit={submit}
+          <motion.div
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 24, opacity: 0 }}
-            className="relative w-full max-w-lg max-h-[92dvh] overflow-y-auto bg-card rounded-t-3xl md:rounded-3xl border border-border p-5 space-y-4"
+            className="relative w-full max-w-lg max-h-[92dvh] overflow-y-auto bg-card rounded-t-3xl md:rounded-3xl border border-border p-5"
+          >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void saveRecord();
+            }}
+            className="space-y-4"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold">{task?.id ? 'Editar' : 'Nova tarefa'}</h2>
@@ -264,14 +269,16 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
                 </button>
               )}
               <button
-                type="submit"
+                type="button"
                 disabled={saving}
+                onClick={() => { void saveRecord(); }}
                 className="ml-auto px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60"
               >
                 {saving ? 'Salvando…' : 'Salvar'}
               </button>
             </div>
-          </motion.form>
+          </form>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
