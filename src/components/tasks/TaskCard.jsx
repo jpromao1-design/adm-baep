@@ -4,6 +4,7 @@ import { CheckCircle2, Circle, MapPin, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate, getTaskDate } from '@/lib/dates';
 import { TYPE_LABELS, isOverdue, isTaskDone } from '@/lib/task-status';
+import { getAuxiliar } from '@/lib/sections';
 import { StatusBadge } from './StatusBadge';
 
 export function TaskCard({ task, onClick, onToggleComplete, compact = false }) {
@@ -54,9 +55,10 @@ export function TaskCard({ task, onClick, onToggleComplete, compact = false }) {
                   <MapPin className="w-3 h-3" /> {task.location}
                 </span>
               )}
-              {task.involved && (
+              {task.section && <span>{task.section}</span>}
+              {getAuxiliar(task) && (
                 <span className="inline-flex items-center gap-1 truncate">
-                  <Users className="w-3 h-3" /> {task.involved}
+                  <Users className="w-3 h-3" /> {getAuxiliar(task)}
                 </span>
               )}
             </div>

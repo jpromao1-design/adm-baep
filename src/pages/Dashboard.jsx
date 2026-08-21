@@ -7,6 +7,7 @@ import { NotificationBanner } from '@/components/dashboard/NotificationBanner';
 import { StatsRow } from '@/components/dashboard/StatsRow';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
+import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskModals } from '@/hooks/useTaskModals';
@@ -32,7 +33,7 @@ function DashboardSection({ id, title, count, accent, children }) {
 }
 
 export default function Dashboard() {
-  const { tasks, isLoading, handleSave, handleDelete } = useTasks();
+  const { tasks, isLoading, handleSave, handleDelete, handleImport } = useTasks();
   const modals = useTaskModals();
   const handleToggleComplete = useToggleComplete();
 
@@ -122,7 +123,8 @@ export default function Dashboard() {
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <TaskIOBar tasks={tasks} onImport={handleImport} />
           <NotificationBell tasks={tasks} />
           <button
             type="button"

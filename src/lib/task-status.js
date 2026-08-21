@@ -17,13 +17,6 @@ export const TYPE_LABELS = {
   compromisso: 'Compromisso',
 };
 
-export const PRIORITY_CONFIG = {
-  baixa: { label: 'Baixa', className: 'text-slate-500' },
-  media: { label: 'Média', className: 'text-sky-600' },
-  alta: { label: 'Alta', className: 'text-amber-600' },
-  urgente: { label: 'Urgente', className: 'text-rose-600' },
-};
-
 export function isTaskDone(task) {
   if (task.is_recurring && task._occurrenceDate) {
     return isOccurrenceCompleted(task, task._occurrenceDate);

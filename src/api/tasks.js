@@ -1,14 +1,22 @@
 import { supabase } from './supabaseClient';
 
 const TASK_COLUMNS = [
-  'id', 'title', 'description', 'type', 'status', 'priority',
+  'id', 'title', 'description', 'type', 'status', 'section',
   'received_date', 'start_date', 'due_date', 'end_date',
   'event_date', 'event_time', 'event_datetime',
-  'location', 'involved', 'notes', 'observations',
+  'location', 'auxiliar', 'notes', 'observations',
   'remind_on_day', 'remind_day_before',
   'is_recurring', 'recurrence', 'recurrence_end_date', 'completed_occurrences',
   'created_by', 'created_at', 'updated_at',
 ].join(', ');
+
+function normalizeRow(row) {
+  if (!row) return row;
+  return {
+    ...row,
+    auxiliar: row.auxiliar ?? row.involved ?? null,
+  };
+}
 
 export async function listTasks(limit = 500) {
   const { data, error } = await supabase
@@ -17,7 +25,7 @@ export async function listTasks(limit = 500) {
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return data || [];
+  return (data || []).map(normalizeRow);
 }
 
 export async function createTask(payload) {
@@ -28,7 +36,19 @@ export async function createTask(payload) {
     .select(TASK_COLUMNS)
     .single();
   if (error) throw error;
-  return data;
+  return normalizeRow(data);
+}
+
+export async function createTasks(payloads) {
+  if (!payloads.length) return [];
+  const { data: sessionData } = await supabase.auth.getUser();
+  const uid = sessionData?.user?.id ?? null;
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert(payloads.map((p) => ({ ...p, created_by: uid })))
+    .select(TASK_COLUMNS);
+  if (error) throw error;
+  return (data || []).map(normalizeRow);
 }
 
 export async function updateTask(id, payload) {
@@ -39,7 +59,7 @@ export async function updateTask(id, payload) {
     .select(TASK_COLUMNS)
     .single();
   if (error) throw error;
-  return data;
+  return normalizeRow(data);
 }
 
 export async function deleteTask(id) {
@@ -56,7 +76,13 @@ export function stripMeta(form) {
     created_date,
     updated_date,
     _occurrenceDate,
+    priority,
+    involved,
     ...data
   } = form;
+  data.auxiliar = (form.auxiliar ?? involved ?? '').toString().trim() || null;
+  data.section = form.section || null;
+  delete data.priority;
+  delete data.involved;
   return data;
 }

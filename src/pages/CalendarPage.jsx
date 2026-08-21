@@ -20,6 +20,7 @@ import { getTaskDate, parseDateOnly, toDateStr } from '@/lib/dates';
 import { expandRecurringTasks } from '@/lib/recurrence';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
+import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskModals } from '@/hooks/useTaskModals';
@@ -28,7 +29,7 @@ import { useToggleComplete } from '@/hooks/useToggleComplete';
 export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const { tasks, isLoading, handleSave, handleDelete } = useTasks();
+  const { tasks, isLoading, handleSave, handleDelete, handleImport } = useTasks();
   const modals = useTaskModals();
   const handleToggleComplete = useToggleComplete();
 
@@ -66,15 +67,18 @@ export default function CalendarPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Agenda</h1>
-        <button
-          type="button"
-          onClick={() => modals.openNew({ due_date: selectedDateStr, event_date: selectedDateStr })}
-          className="text-sm font-semibold text-primary min-h-11 px-2"
-        >
-          Nova no dia
-        </button>
+        <div className="flex items-center gap-2">
+          <TaskIOBar tasks={selectedTasks.length ? selectedTasks : tasks} onImport={handleImport} />
+          <button
+            type="button"
+            onClick={() => modals.openNew({ due_date: selectedDateStr, event_date: selectedDateStr })}
+            className="text-sm font-semibold text-primary min-h-11 px-2"
+          >
+            Nova no dia
+          </button>
+        </div>
       </div>
 
       <div className="bg-card rounded-2xl border border-border p-4">

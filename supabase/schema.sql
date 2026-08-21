@@ -25,7 +25,7 @@ create table if not exists public.allowed_users (
 -- SUBSTITUA pelos e-mails reais antes de executar, ou rode o INSERT depois.
 insert into public.allowed_users (email, role, display_name) values
   ('jpromao1@gmail.com', 'admin', 'Administração'),
-  ('rogeriopolmil@gmail.com', 'auxiliar', 'Sargento auxiliar')
+  ('rogeriopolmil@gmail.com', 'auxiliar', 'Sargento Souza')
 on conflict (email) do nothing;
 
 -- -----------------------------------------------------------------------------
@@ -94,8 +94,7 @@ create table if not exists public.tasks (
        check (type in ('tarefa', 'demanda', 'evento', 'compromisso')),
   status text not null default 'pendente'
        check (status in ('pendente', 'em_andamento', 'aguardando', 'concluido')),
-  priority text not null default 'media'
-       check (priority in ('baixa', 'media', 'alta', 'urgente')),
+  section text check (section is null or section in ('P1', 'P3', 'P5')),
   received_date date,
   start_date date,
   due_date date,
@@ -104,7 +103,7 @@ create table if not exists public.tasks (
   event_time text,
   event_datetime timestamptz,
   location text,
-  involved text,
+  auxiliar text,
   notes text,
   observations text,
   remind_on_day boolean not null default true,
@@ -173,7 +172,7 @@ returns table (
   status text,
   is_completed boolean,
   location text,
-  involved text,
+  auxiliar text,
   is_recurring boolean,
   recurrence text
 )
@@ -200,7 +199,7 @@ begin
         status := r.status;
         is_completed := (r.status = 'concluido');
         location := r.location;
-        involved := r.involved;
+        auxiliar := r.auxiliar;
         is_recurring := false;
         recurrence := r.recurrence;
         return next;
@@ -229,7 +228,7 @@ begin
       status := r.status;
       is_completed := cursor_date = any (r.completed_occurrences);
       location := r.location;
-      involved := r.involved;
+      auxiliar := r.auxiliar;
       is_recurring := true;
       recurrence := r.recurrence;
       return next;

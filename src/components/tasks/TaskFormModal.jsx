@@ -3,13 +3,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Input, Label, Select, Textarea } from '@/components/ui/input';
 import { RECURRENCE_LABELS } from '@/lib/recurrence';
+import { SECTIONS, getAuxiliar } from '@/lib/sections';
 
 const EMPTY = {
   title: '',
   description: '',
   type: 'tarefa',
   status: 'pendente',
-  priority: 'media',
+  section: '',
   received_date: '',
   start_date: '',
   due_date: '',
@@ -17,7 +18,7 @@ const EMPTY = {
   event_date: '',
   event_time: '',
   location: '',
-  involved: '',
+  auxiliar: '',
   notes: '',
   observations: '',
   remind_on_day: true,
@@ -35,15 +36,18 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
   useEffect(() => {
     if (!open) return;
     if (task) {
+      const { priority, involved, ...rest } = task;
       setForm({
         ...EMPTY,
-        ...task,
+        ...rest,
         received_date: task.received_date || '',
         start_date: task.start_date || '',
         due_date: task.due_date || '',
         end_date: task.end_date || '',
         event_date: task.event_date || '',
         event_time: task.event_time || '',
+        auxiliar: getAuxiliar(task),
+        section: task.section || '',
         recurrence: task.recurrence || '',
         recurrence_end_date: task.recurrence_end_date || '',
         remind_on_day: task.remind_on_day !== false,
@@ -72,6 +76,8 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
         event_time: isEvent ? form.event_time || null : null,
         recurrence: form.is_recurring ? form.recurrence || null : null,
         recurrence_end_date: form.is_recurring ? form.recurrence_end_date || null : null,
+        auxiliar: form.auxiliar.trim() || null,
+        section: form.section || null,
       };
       await onSave(payload);
       onClose();
@@ -129,12 +135,12 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>Prioridade</Label>
-                <Select value={form.priority} onChange={(e) => set('priority', e.target.value)}>
-                  <option value="baixa">Baixa</option>
-                  <option value="media">Média</option>
-                  <option value="alta">Alta</option>
-                  <option value="urgente">Urgente</option>
+                <Label>Seção</Label>
+                <Select value={form.section} onChange={(e) => set('section', e.target.value)}>
+                  <option value="">Selecione</option>
+                  {SECTIONS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
                 </Select>
               </div>
               <div className="space-y-1">
@@ -160,8 +166,8 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
                 <Input value={form.location} onChange={(e) => set('location', e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label>Envolvidos</Label>
-                <Input value={form.involved} onChange={(e) => set('involved', e.target.value)} />
+                <Label>Auxiliar</Label>
+                <Input value={form.auxiliar} onChange={(e) => set('auxiliar', e.target.value)} />
               </div>
             </div>
 

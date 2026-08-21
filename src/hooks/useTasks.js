@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createTask, deleteTask, listTasks, stripMeta, updateTask } from '@/api/tasks';
+import { createTask, createTasks, deleteTask, listTasks, stripMeta, updateTask } from '@/api/tasks';
 import { toast } from '@/components/ui/toaster';
 
 export function useTasks(limit = 500) {
@@ -42,10 +42,16 @@ export function useTasks(limit = 500) {
     await deleteMutation.mutateAsync(id);
   };
 
+  const handleImport = async (rows) => {
+    await createTasks(rows.map((row) => stripMeta(row)));
+    await invalidate();
+  };
+
   return {
     tasks: query.data || [],
     isLoading: query.isLoading,
     handleSave,
     handleDelete,
+    handleImport,
   };
 }

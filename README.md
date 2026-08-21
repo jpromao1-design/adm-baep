@@ -77,4 +77,6 @@ Não commite o arquivo `.env`.
 
 ## 6. Depois do Authentication
 
-Se os usuários já foram criados no painel, rode também `supabase/link-auth-users.sql`. Isso coloca os e-mails reais em `allowed_users` e gera os `profiles`. Sem esse passo o login autentica, mas o app recusa o acesso.
+Rode `supabase/link-auth-users.sql` e, para Seção/Auxiliar, `supabase/migration-secao-auxiliar.sql`.
+
+O auxiliar Sargento Souza (`rogeriopolmil@gmail.com`) fica com perfil `auxiliar`. A senha inicial deve ser definida em Authentication → Users (não fica no repositório).

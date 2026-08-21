@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react';
 import { QuickFilters } from '@/components/tasks/QuickFilters';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
+import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskModals } from '@/hooks/useTaskModals';
@@ -19,7 +20,7 @@ export default function Tasks() {
   const initialFilter = searchParams.get('filter') || 'all';
   const shouldOpenNew = searchParams.get('new') === 'true';
 
-  const { tasks, isLoading, handleSave, handleDelete } = useTasks();
+  const { tasks, isLoading, handleSave, handleDelete, handleImport } = useTasks();
   const modals = useTaskModals();
   const handleToggleComplete = useToggleComplete();
   const [filter, setFilter] = React.useState(initialFilter);
@@ -87,15 +88,18 @@ export default function Tasks() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Tarefas</h1>
-        <button
-          type="button"
-          onClick={modals.openNew}
-          className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
-        >
-          <Plus className="w-4 h-4" /> Nova
-        </button>
+        <div className="flex items-center gap-2">
+          <TaskIOBar tasks={filteredTasks} onImport={handleImport} />
+          <button
+            type="button"
+            onClick={modals.openNew}
+            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-4 h-4" /> Nova
+          </button>
+        </div>
       </div>
 
       <QuickFilters active={filter} onChange={setFilter} />

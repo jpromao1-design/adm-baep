@@ -4,6 +4,7 @@ import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
+import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskModals } from '@/hooks/useTaskModals';
@@ -11,7 +12,7 @@ import { useToggleComplete } from '@/hooks/useToggleComplete';
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  const { tasks, handleSave, handleDelete } = useTasks();
+  const { tasks, handleSave, handleDelete, handleImport } = useTasks();
   const modals = useTaskModals();
   const handleToggleComplete = useToggleComplete();
 
@@ -24,19 +25,24 @@ export default function SearchPage() {
         t.description?.toLowerCase().includes(q) ||
         t.notes?.toLowerCase().includes(q) ||
         t.location?.toLowerCase().includes(q) ||
+        t.auxiliar?.toLowerCase().includes(q) ||
         t.involved?.toLowerCase().includes(q) ||
+        t.section?.toLowerCase().includes(q) ||
         t.observations?.toLowerCase().includes(q)
     );
   }, [tasks, query]);
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-4">
-      <h1 className="text-2xl font-bold text-foreground tracking-tight">Busca</h1>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Busca</h1>
+        <TaskIOBar tasks={results.length ? results : tasks} onImport={handleImport} />
+      </div>
 
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por título, descrição, local, envolvidos..."
+          placeholder="Buscar por título, descrição, local, auxiliar, seção..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="pl-11 pr-10 h-12 rounded-2xl bg-card border-border text-sm"

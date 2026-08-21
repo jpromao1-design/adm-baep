@@ -4,6 +4,7 @@ import { AlertTriangle, Bell, Calendar, CalendarCheck, Clock, X } from 'lucide-r
 import { addDays, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { daysUntil, formatDate, getTaskDate } from '@/lib/dates';
+import { getAuxiliar } from '@/lib/sections';
 import { expandRecurringTasks } from '@/lib/recurrence';
 import { isTaskDone } from '@/lib/task-status';
 
@@ -132,8 +133,8 @@ export function NotificationBell({ tasks = [] }) {
                             <span className={cn('text-xs font-semibold', info.color)}>{info.label}</span>
                             <span className="text-xs text-muted-foreground">{formatDate(getTaskDate(task))}</span>
                           </div>
-                          {task.involved && (
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.involved}</p>
+                          {getAuxiliar(task) && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{getAuxiliar(task)}</p>
                           )}
                         </div>
                       </div>

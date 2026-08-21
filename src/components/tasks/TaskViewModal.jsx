@@ -2,7 +2,8 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MapPin, Pencil, Trash2, Users, X } from 'lucide-react';
 import { formatDate } from '@/lib/dates';
-import { PRIORITY_CONFIG, TYPE_LABELS } from '@/lib/task-status';
+import { TYPE_LABELS } from '@/lib/task-status';
+import { getAuxiliar } from '@/lib/sections';
 import { RECURRENCE_LABELS } from '@/lib/recurrence';
 import { StatusBadge } from './StatusBadge';
 
@@ -37,10 +38,8 @@ export function TaskViewModal({ open, onClose, task, onEdit, onDelete }) {
 
             <div className="flex flex-wrap gap-2">
               <StatusBadge task={task} />
-              {task.priority && (
-                <span className={`text-[10px] font-bold ${PRIORITY_CONFIG[task.priority]?.className || ''}`}>
-                  {PRIORITY_CONFIG[task.priority]?.label}
-                </span>
+              {task.section && (
+                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{task.section}</span>
               )}
             </div>
 
@@ -52,8 +51,8 @@ export function TaskViewModal({ open, onClose, task, onEdit, onDelete }) {
               {task.location && (
                 <p className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {task.location}</p>
               )}
-              {task.involved && (
-                <p className="flex items-center gap-2"><Users className="w-4 h-4" /> {task.involved}</p>
+              {getAuxiliar(task) && (
+                <p className="flex items-center gap-2"><Users className="w-4 h-4" /> Auxiliar: {getAuxiliar(task)}</p>
               )}
               {task.is_recurring && <p>Recorrência: {RECURRENCE_LABELS[task.recurrence] || task.recurrence}</p>}
               {task.description && <p className="text-foreground whitespace-pre-wrap">{task.description}</p>}
