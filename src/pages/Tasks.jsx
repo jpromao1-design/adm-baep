@@ -94,7 +94,7 @@ export default function Tasks() {
           <TaskIOBar tasks={filteredTasks} onImport={handleImport} />
           <button
             type="button"
-            onClick={modals.openNew}
+            onClick={() => modals.openNew()}
             className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             <Plus className="w-4 h-4" /> Nova

@@ -31,10 +31,14 @@ export function useTasks(limit = 500) {
   });
 
   const handleSave = async (form) => {
-    if (form.id) {
-      await updateMutation.mutateAsync({ id: form.id, data: stripMeta(form) });
+    if (!form || typeof form !== 'object' || typeof form.preventDefault === 'function' || form.nativeEvent) {
+      return;
+    }
+    const data = stripMeta(form);
+    if (typeof form.id === 'string' && form.id) {
+      await updateMutation.mutateAsync({ id: form.id, data });
     } else {
-      await createMutation.mutateAsync(stripMeta(form));
+      await createMutation.mutateAsync(data);
     }
   };
 

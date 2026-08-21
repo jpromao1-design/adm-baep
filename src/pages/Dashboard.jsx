@@ -128,7 +128,7 @@ export default function Dashboard() {
           <NotificationBell tasks={tasks} />
           <button
             type="button"
-            onClick={modals.openNew}
+            onClick={() => modals.openNew()}
             className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl text-sm font-semibold hover:opacity-90 active:scale-[0.97] transition-all"
           >
             <Plus className="w-4 h-4" /> Nova Tarefa
@@ -209,7 +209,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-sm">Nenhuma tarefa ainda.</p>
           <button
             type="button"
-            onClick={modals.openNew}
+            onClick={() => modals.openNew()}
             className="mt-4 px-6 py-3.5 bg-primary text-primary-foreground rounded-2xl text-sm font-semibold active:scale-[0.97] transition-all"
           >
             Criar primeira tarefa

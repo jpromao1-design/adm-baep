@@ -28,6 +28,41 @@ const EMPTY = {
   recurrence_end_date: '',
 };
 
+function isDomOrReactEvent(value) {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      (typeof value.preventDefault === 'function' || value.nativeEvent)
+  );
+}
+
+function formFromSource(task) {
+  const next = { ...EMPTY };
+  if (!task || isDomOrReactEvent(task)) return next;
+
+  for (const key of Object.keys(EMPTY)) {
+    const value = task[key];
+    if (value == null || typeof value === 'object') continue;
+    next[key] = value;
+  }
+
+  if (typeof task.id === 'string') next.id = task.id;
+  next.auxiliar = getAuxiliar(task);
+  next.section = task.section || '';
+  next.received_date = task.received_date || '';
+  next.start_date = task.start_date || '';
+  next.due_date = task.due_date || '';
+  next.end_date = task.end_date || '';
+  next.event_date = task.event_date || '';
+  next.event_time = task.event_time || '';
+  next.recurrence = task.recurrence || '';
+  next.recurrence_end_date = task.recurrence_end_date || '';
+  next.remind_on_day = task.remind_on_day !== false;
+  next.remind_day_before = task.remind_day_before !== false;
+  next.is_recurring = Boolean(task.is_recurring);
+  return next;
+}
+
 export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -35,49 +70,39 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
 
   useEffect(() => {
     if (!open) return;
-    if (task) {
-      const { priority, involved, ...rest } = task;
-      setForm({
-        ...EMPTY,
-        ...rest,
-        received_date: task.received_date || '',
-        start_date: task.start_date || '',
-        due_date: task.due_date || '',
-        end_date: task.end_date || '',
-        event_date: task.event_date || '',
-        event_time: task.event_time || '',
-        auxiliar: getAuxiliar(task),
-        section: task.section || '',
-        recurrence: task.recurrence || '',
-        recurrence_end_date: task.recurrence_end_date || '',
-        remind_on_day: task.remind_on_day !== false,
-        remind_day_before: task.remind_day_before !== false,
-      });
-    } else {
-      setForm(EMPTY);
-    }
+    setForm(formFromSource(task));
   }, [open, task]);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
   const submit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!form.title.trim()) return;
     setSaving(true);
     try {
       const payload = {
-        ...form,
+        id: form.id || undefined,
         title: form.title.trim(),
+        description: form.description || null,
+        type: form.type,
+        status: form.status,
+        section: form.section || null,
         received_date: form.received_date || null,
         start_date: form.start_date || null,
         due_date: isEvent ? null : form.due_date || null,
         end_date: form.end_date || null,
         event_date: isEvent ? form.event_date || null : null,
         event_time: isEvent ? form.event_time || null : null,
+        location: form.location || null,
+        auxiliar: String(form.auxiliar || '').trim() || null,
+        notes: form.notes || null,
+        observations: form.observations || null,
+        remind_on_day: Boolean(form.remind_on_day),
+        remind_day_before: Boolean(form.remind_day_before),
+        is_recurring: Boolean(form.is_recurring),
         recurrence: form.is_recurring ? form.recurrence || null : null,
         recurrence_end_date: form.is_recurring ? form.recurrence_end_date || null : null,
-        auxiliar: form.auxiliar.trim() || null,
-        section: form.section || null,
       };
       await onSave(payload);
       onClose();

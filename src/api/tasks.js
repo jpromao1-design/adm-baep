@@ -67,22 +67,37 @@ export async function deleteTask(id) {
   if (error) throw error;
 }
 
+const WRITE_FIELDS = [
+  'title', 'description', 'type', 'status', 'section',
+  'received_date', 'start_date', 'due_date', 'end_date',
+  'event_date', 'event_time', 'event_datetime',
+  'location', 'auxiliar', 'notes', 'observations',
+  'remind_on_day', 'remind_day_before',
+  'is_recurring', 'recurrence', 'recurrence_end_date', 'completed_occurrences',
+];
+
+function isPlainValue(value) {
+  if (value == null) return true;
+  const type = typeof value;
+  if (type === 'string' || type === 'number' || type === 'boolean') return true;
+  if (Array.isArray(value)) return value.every((item) => typeof item === 'string' || typeof item === 'number');
+  return false;
+}
+
 export function stripMeta(form) {
-  const {
-    id,
-    created_at,
-    updated_at,
-    created_by,
-    created_date,
-    updated_date,
-    _occurrenceDate,
-    priority,
-    involved,
-    ...data
-  } = form;
-  data.auxiliar = (form.auxiliar ?? involved ?? '').toString().trim() || null;
+  if (!form || typeof form !== 'object' || typeof form.preventDefault === 'function' || form.nativeEvent) {
+    throw new Error('Dados do formulário inválidos.');
+  }
+
+  const data = {};
+  for (const key of WRITE_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(form, key)) continue;
+    const value = form[key];
+    if (!isPlainValue(value)) continue;
+    data[key] = value === '' ? null : value;
+  }
+
+  data.auxiliar = String(form.auxiliar ?? form.involved ?? '').trim() || null;
   data.section = form.section || null;
-  delete data.priority;
-  delete data.involved;
   return data;
 }
