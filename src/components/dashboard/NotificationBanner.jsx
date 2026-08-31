@@ -1,46 +1,43 @@
 import React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { AlertTriangle, CalendarCheck, Clock } from 'lucide-react';
+import { AlertBanner } from '@/components/ui/alert-banner';
 
 export function NotificationBanner({ overdueCount, dueTodayCount, eventsToday }) {
   if (overdueCount === 0 && dueTodayCount === 0 && eventsToday === 0) return null;
+
   return (
-    <AnimatePresence>
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-        {overdueCount > 0 && (
-          <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl p-3.5">
-            <div className="p-2 bg-red-100 rounded-xl"><AlertTriangle className="w-4 h-4 text-red-600" /></div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-red-800">
-                {overdueCount} {overdueCount === 1 ? 'tarefa atrasada' : 'tarefas atrasadas'}
-              </p>
-              <p className="text-xs text-red-600">Requer atenção imediata</p>
-            </div>
-          </div>
-        )}
-        {dueTodayCount > 0 && (
-          <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-3.5">
-            <div className="p-2 bg-amber-100 rounded-xl"><Clock className="w-4 h-4 text-amber-600" /></div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-800">
-                {dueTodayCount} {dueTodayCount === 1 ? 'tarefa vence' : 'tarefas vencem'} hoje
-              </p>
-              <p className="text-xs text-amber-600">Não perca o prazo</p>
-            </div>
-          </div>
-        )}
-        {eventsToday > 0 && (
-          <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-2xl p-3.5">
-            <div className="p-2 bg-blue-100 rounded-xl"><CalendarCheck className="w-4 h-4 text-blue-600" /></div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-blue-800">
-                {eventsToday} {eventsToday === 1 ? 'evento' : 'eventos'} hoje
-              </p>
-              <p className="text-xs text-blue-600">Confira sua agenda</p>
-            </div>
-          </div>
-        )}
-      </motion.div>
-    </AnimatePresence>
+    <div className="space-y-2">
+      {overdueCount > 0 && (
+        <Link to="/tasks?filter=overdue" className="block focus-ring rounded-2xl">
+          <AlertBanner
+            tone="danger"
+            icon={AlertTriangle}
+            title={`${overdueCount} ${overdueCount === 1 ? 'tarefa vencida' : 'tarefas vencidas'}`}
+            description="Requer atenção imediata — toque para ver a lista"
+          />
+        </Link>
+      )}
+      {dueTodayCount > 0 && (
+        <Link to="/tasks?filter=today" className="block focus-ring rounded-2xl">
+          <AlertBanner
+            tone="warning"
+            icon={Clock}
+            title={`${dueTodayCount} ${dueTodayCount === 1 ? 'tarefa vence' : 'tarefas vencem'} hoje`}
+            description="Confira os prazos do dia"
+          />
+        </Link>
+      )}
+      {eventsToday > 0 && (
+        <Link to="/calendar" className="block focus-ring rounded-2xl">
+          <AlertBanner
+            tone="info"
+            icon={CalendarCheck}
+            title={`${eventsToday} ${eventsToday === 1 ? 'evento' : 'eventos'} hoje`}
+            description="Abrir agenda do dia"
+          />
+        </Link>
+      )}
+    </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { addDays, startOfDay } from 'date-fns';
+import { ListTodo, Plus } from 'lucide-react';
 import { NotificationBell } from '@/components/dashboard/NotificationBell';
 import { NotificationBanner } from '@/components/dashboard/NotificationBanner';
 import { StatsRow } from '@/components/dashboard/StatsRow';
@@ -9,26 +10,49 @@ import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
 import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
+import { PageHeader } from '@/components/ui/page-header';
+import { PageLoadingState } from '@/components/ui/loading-state';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskModals } from '@/hooks/useTaskModals';
 import { useToggleComplete } from '@/hooks/useToggleComplete';
 import { checkAndNotifyTasks, requestNotificationPermission } from '@/lib/notifications';
 import { expandRecurringTasks, isOccurrenceCompleted } from '@/lib/recurrence';
-import { getTaskDate, toDateStr, todayStr } from '@/lib/dates';
+import { getTaskDate, toDateStr, todayStr, formatDateLong } from '@/lib/dates';
 import { isOverdue } from '@/lib/task-status';
-import { Plus } from 'lucide-react';
 
-function DashboardSection({ id, title, count, accent, children }) {
+function DashboardSection({ id, title, count, tone = 'default', linkTo, children }) {
+  const titleClass =
+    tone === 'danger'
+      ? 'text-destructive'
+      : tone === 'warning'
+        ? 'text-warning'
+        : tone === 'info'
+          ? 'text-info'
+          : 'text-foreground';
+
   return (
-    <div id={id}>
-      <div className="flex items-center gap-2 mb-3">
-        <h2 className={`text-sm font-bold ${accent || 'text-foreground'}`}>{title}</h2>
-        <span className="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">{count}</span>
+    <section id={id} aria-labelledby={`${id}-title`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <h2 id={`${id}-title`} className={`section-title ${titleClass}`}>
+            {title}
+          </h2>
+          <span className="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+            {count}
+          </span>
+        </div>
+        {linkTo && (
+          <Link to={linkTo} className="text-xs text-primary font-semibold hover:underline focus-ring rounded">
+            Ver todas →
+          </Link>
+        )}
       </div>
       <div className="space-y-2">
         <AnimatePresence>{children}</AnimatePresence>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -106,35 +130,25 @@ export default function Dashboard() {
     };
   }, [tasks]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[70dvh]">
-        <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (isLoading) return <PageLoadingState />;
+
+  const dateLabel = formatDateLong(new Date());
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          <TaskIOBar tasks={tasks} onImport={handleImport} />
-          <NotificationBell tasks={tasks} />
-          <button
-            type="button"
-            onClick={() => modals.openNew()}
-            className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-2xl text-sm font-semibold hover:opacity-90 active:scale-[0.97] transition-all"
-          >
-            <Plus className="w-4 h-4" /> Nova Tarefa
-          </button>
-        </div>
-      </div>
+    <div className="page-container space-y-6">
+      <PageHeader
+        title="Início"
+        subtitle={dateLabel}
+        actions={
+          <>
+            <TaskIOBar tasks={tasks} onImport={handleImport} />
+            <NotificationBell tasks={tasks} />
+            <Button className="hidden md:inline-flex" onClick={() => modals.openNew()}>
+              <Plus className="w-4 h-4" /> Nova Tarefa
+            </Button>
+          </>
+        }
+      />
 
       <NotificationBanner
         overdueCount={overdueTasks.length}
@@ -143,8 +157,22 @@ export default function Dashboard() {
       />
       <StatsRow counts={counts} />
 
+      {overdueTasks.length > 0 && (
+        <DashboardSection
+          id="section-atrasadas"
+          title="Vencidas"
+          count={overdueTasks.length}
+          tone="danger"
+          linkTo={overdueTasks.length > 5 ? '/tasks?filter=overdue' : undefined}
+        >
+          {overdueTasks.slice(0, 5).map((t) => (
+            <TaskCard key={t.id} task={t} onClick={modals.openView} onToggleComplete={handleToggleComplete} />
+          ))}
+        </DashboardSection>
+      )}
+
       {todayTasks.length > 0 && (
-        <DashboardSection id="section-hoje" title="Hoje" count={todayTasks.length}>
+        <DashboardSection id="section-hoje" title="Hoje" count={todayTasks.length} linkTo="/tasks?filter=today">
           {todayTasks.map((t) => (
             <TaskCard
               key={`${t.id}-${t._occurrenceDate || 'base'}`}
@@ -155,20 +183,15 @@ export default function Dashboard() {
           ))}
         </DashboardSection>
       )}
-      {overdueTasks.length > 0 && (
-        <DashboardSection id="section-atrasadas" title="Atrasadas" count={overdueTasks.length} accent="text-red-600">
-          {overdueTasks.slice(0, 5).map((t) => (
-            <TaskCard key={t.id} task={t} onClick={modals.openView} onToggleComplete={handleToggleComplete} />
-          ))}
-          {overdueTasks.length > 5 && (
-            <Link to="/tasks?filter=overdue" className="text-xs text-primary font-medium hover:underline">
-              Ver todas →
-            </Link>
-          )}
-        </DashboardSection>
-      )}
+
       {dueSoonTasks.length > 0 && (
-        <DashboardSection id="section-andamento" title="Vencendo em breve" count={dueSoonTasks.length} accent="text-amber-600">
+        <DashboardSection
+          id="section-andamento"
+          title="Vencendo em breve"
+          count={dueSoonTasks.length}
+          tone="warning"
+          linkTo="/tasks?filter=due_soon"
+        >
           {dueSoonTasks.map((t) => (
             <TaskCard
               key={`${t.id}-${t._occurrenceDate || 'base'}`}
@@ -179,8 +202,9 @@ export default function Dashboard() {
           ))}
         </DashboardSection>
       )}
+
       {eventsToday.length > 0 && (
-        <DashboardSection title="Eventos de hoje" count={eventsToday.length} accent="text-blue-600">
+        <DashboardSection title="Eventos de hoje" count={eventsToday.length} tone="info" linkTo="/calendar">
           {eventsToday.map((t) => (
             <TaskCard
               key={`${t.id}-${t._occurrenceDate || 'base'}`}
@@ -191,6 +215,7 @@ export default function Dashboard() {
           ))}
         </DashboardSection>
       )}
+
       {recentDone.length > 0 && (
         <DashboardSection id="section-concluidas" title="Concluídas recentemente" count={recentDone.length}>
           {recentDone.map((t) => (
@@ -204,21 +229,31 @@ export default function Dashboard() {
           ))}
         </DashboardSection>
       )}
+
       {tasks.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-muted-foreground text-sm">Nenhuma tarefa ainda.</p>
-          <button
-            type="button"
-            onClick={() => modals.openNew()}
-            className="mt-4 px-6 py-3.5 bg-primary text-primary-foreground rounded-2xl text-sm font-semibold active:scale-[0.97] transition-all"
-          >
-            Criar primeira tarefa
-          </button>
-        </div>
+        <EmptyState
+          icon={ListTodo}
+          title="Nenhuma tarefa cadastrada"
+          description="Crie a primeira tarefa ou importe registros de uma planilha Excel/CSV."
+          actionLabel="Criar primeira tarefa"
+          onAction={() => modals.openNew()}
+        />
       )}
 
-      <TaskViewModal open={modals.viewModalOpen} onClose={modals.closeView} task={modals.selectedTask} onEdit={modals.openEdit} onDelete={handleDelete} />
-      <TaskFormModal open={modals.modalOpen} onClose={modals.closeForm} task={modals.selectedTask} onSave={(row) => handleSave(row)} onDelete={handleDelete} />
+      <TaskViewModal
+        open={modals.viewModalOpen}
+        onClose={modals.closeView}
+        task={modals.selectedTask}
+        onEdit={modals.openEdit}
+        onDelete={handleDelete}
+      />
+      <TaskFormModal
+        open={modals.modalOpen}
+        onClose={modals.closeForm}
+        task={modals.selectedTask}
+        onSave={(row) => handleSave(row)}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

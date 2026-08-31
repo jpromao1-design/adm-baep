@@ -2,12 +2,17 @@ import React, { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { addDays, isThisWeek, isTomorrow, startOfDay } from 'date-fns';
-import { Plus } from 'lucide-react';
+import { ListTodo, Plus } from 'lucide-react';
 import { QuickFilters } from '@/components/tasks/QuickFilters';
 import { TaskCard } from '@/components/tasks/TaskCard';
+import { TaskTable } from '@/components/tasks/TaskTable';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
 import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
+import { PageHeader } from '@/components/ui/page-header';
+import { PageLoadingState } from '@/components/ui/loading-state';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Button } from '@/components/ui/button';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskModals } from '@/hooks/useTaskModals';
 import { useToggleComplete } from '@/hooks/useToggleComplete';
@@ -36,6 +41,14 @@ export default function Tasks() {
     next.delete('new');
     setSearchParams(next, { replace: true });
   }, [shouldOpenNew]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleFilterChange = (next) => {
+    setFilter(next);
+    const params = new URLSearchParams(searchParams);
+    if (next === 'all') params.delete('filter');
+    else params.set('filter', next);
+    setSearchParams(params, { replace: true });
+  };
 
   const filteredTasks = useMemo(() => {
     const today = startOfDay(new Date());
@@ -78,33 +91,33 @@ export default function Tasks() {
       });
   }, [tasks, filter]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[70dvh]">
-        <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (isLoading) return <PageLoadingState />;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Tarefas</h1>
-        <div className="flex items-center gap-2">
-          <TaskIOBar tasks={filteredTasks} onImport={handleImport} />
-          <button
-            type="button"
-            onClick={() => modals.openNew()}
-            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" /> Nova
-          </button>
-        </div>
-      </div>
+    <div className="page-container space-y-4">
+      <PageHeader
+        title="Tarefas"
+        subtitle={`${filteredTasks.length} ${filteredTasks.length === 1 ? 'registro' : 'registros'}`}
+        actions={
+          <>
+            <TaskIOBar tasks={filteredTasks} onImport={handleImport} />
+            <Button className="hidden md:inline-flex" onClick={() => modals.openNew()}>
+              <Plus className="w-4 h-4" /> Nova
+            </Button>
+          </>
+        }
+      />
 
-      <QuickFilters active={filter} onChange={setFilter} />
+      <QuickFilters active={filter} onChange={handleFilterChange} />
 
-      <div className="space-y-2">
+      <TaskTable
+        tasks={filteredTasks}
+        onView={modals.openView}
+        onEdit={modals.openEdit}
+        onToggleComplete={handleToggleComplete}
+      />
+
+      <div className="lg:hidden space-y-2">
         <AnimatePresence>
           {filteredTasks.map((t) => (
             <TaskCard
@@ -118,13 +131,29 @@ export default function Tasks() {
       </div>
 
       {filteredTasks.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-muted-foreground text-sm">Nenhuma tarefa encontrada.</p>
-        </div>
+        <EmptyState
+          icon={ListTodo}
+          title="Nenhuma tarefa encontrada"
+          description="Crie uma nova tarefa ou altere os filtros utilizados."
+          actionLabel="Nova tarefa"
+          onAction={() => modals.openNew()}
+        />
       )}
 
-      <TaskViewModal open={modals.viewModalOpen} onClose={modals.closeView} task={modals.selectedTask} onEdit={modals.openEdit} onDelete={handleDelete} />
-      <TaskFormModal open={modals.modalOpen} onClose={modals.closeForm} task={modals.selectedTask} onSave={(row) => handleSave(row)} onDelete={handleDelete} />
+      <TaskViewModal
+        open={modals.viewModalOpen}
+        onClose={modals.closeView}
+        task={modals.selectedTask}
+        onEdit={modals.openEdit}
+        onDelete={handleDelete}
+      />
+      <TaskFormModal
+        open={modals.modalOpen}
+        onClose={modals.closeForm}
+        task={modals.selectedTask}
+        onSave={(row) => handleSave(row)}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

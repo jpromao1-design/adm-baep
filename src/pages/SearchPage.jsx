@@ -6,6 +6,8 @@ import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
 import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
+import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskModals } from '@/hooks/useTaskModals';
 import { useToggleComplete } from '@/hooks/useToggleComplete';
@@ -33,26 +35,29 @@ export default function SearchPage() {
   }, [tasks, query]);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-4 space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Busca</h1>
-        <TaskIOBar tasks={results.length ? results : tasks} onImport={handleImport} />
-      </div>
+    <div className="page-container space-y-4">
+      <PageHeader
+        title="Busca"
+        subtitle="Localize tarefas e demandas rapidamente"
+        actions={<TaskIOBar tasks={results.length ? results : tasks} onImport={handleImport} />}
+      />
 
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
         <Input
-          placeholder="Buscar por título, descrição, local, auxiliar, seção..."
+          placeholder="Buscar por título, descrição, local, auxiliar, seção…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-11 pr-10 h-12 rounded-2xl bg-card border-border text-sm"
+          className="pl-11 pr-11 h-12 rounded-2xl bg-card"
           autoFocus
+          aria-label="Termo de busca"
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-3 top-1/2 -translate-y-1/2 touch-target rounded-xl text-muted-foreground hover:text-foreground"
+            aria-label="Limpar busca"
           >
             <X className="w-4 h-4" />
           </button>
@@ -60,33 +65,49 @@ export default function SearchPage() {
       </div>
 
       {query.trim() && (
-        <p className="text-xs text-muted-foreground">
-          {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
+        <p className="text-xs text-muted-foreground" role="status">
+          {results.length} {results.length === 1 ? 'resultado encontrado' : 'resultados encontrados'}
         </p>
       )}
 
       <div className="space-y-2">
         <AnimatePresence>
           {results.map((t) => (
-            <TaskCard
-              key={t.id}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-            />
+            <TaskCard key={t.id} task={t} onClick={modals.openView} onToggleComplete={handleToggleComplete} />
           ))}
         </AnimatePresence>
       </div>
 
       {!query.trim() && (
-        <div className="text-center py-16">
-          <Search className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Digite para buscar suas tarefas</p>
-        </div>
+        <EmptyState
+          icon={Search}
+          title="Digite para buscar"
+          description="Pesquise por título, descrição, local, auxiliar ou seção. Atalho: tecla / em qualquer tela."
+        />
       )}
 
-      <TaskViewModal open={modals.viewModalOpen} onClose={modals.closeView} task={modals.selectedTask} onEdit={modals.openEdit} onDelete={handleDelete} />
-      <TaskFormModal open={modals.modalOpen} onClose={modals.closeForm} task={modals.selectedTask} onSave={(row) => handleSave(row)} onDelete={handleDelete} />
+      {query.trim() && results.length === 0 && (
+        <EmptyState
+          icon={Search}
+          title="Nenhum resultado"
+          description={`Não encontramos registros para "${query}". Tente outro termo ou limpe a busca.`}
+        />
+      )}
+
+      <TaskViewModal
+        open={modals.viewModalOpen}
+        onClose={modals.closeView}
+        task={modals.selectedTask}
+        onEdit={modals.openEdit}
+        onDelete={handleDelete}
+      />
+      <TaskFormModal
+        open={modals.modalOpen}
+        onClose={modals.closeForm}
+        task={modals.selectedTask}
+        onSave={(row) => handleSave(row)}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

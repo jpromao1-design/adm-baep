@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { FilterChip, FilterSheet, FilterSheetTrigger } from '@/components/ui/filter-sheet';
 
-const FILTERS = [
+export const FILTER_OPTIONS = [
   { id: 'all', label: 'Todas' },
   { id: 'open', label: 'Abertas' },
   { id: 'today', label: 'Hoje' },
@@ -14,23 +15,54 @@ const FILTERS = [
 ];
 
 export function QuickFilters({ active, onChange }) {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [draft, setDraft] = useState(active);
+  const activeCount = active !== 'all' ? 1 : 0;
+
+  const openSheet = () => {
+    setDraft(active);
+    setSheetOpen(true);
+  };
+
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-      {FILTERS.map((f) => (
-        <button
-          key={f.id}
-          type="button"
-          onClick={() => onChange(f.id)}
-          className={cn(
-            'shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-colors',
-            active === f.id
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-card border border-border text-muted-foreground hover:text-foreground'
-          )}
+    <div className="space-y-2">
+      {/* Desktop / tablet: horizontal chips */}
+      <div className="hidden md:flex flex-wrap gap-2">
+        {FILTER_OPTIONS.map((f) => (
+          <FilterChip key={f.id} active={active === f.id} onClick={() => onChange(f.id)}>
+            {f.label}
+          </FilterChip>
+        ))}
+      </div>
+
+      {/* Mobile: filter sheet */}
+      <div className="md:hidden flex items-center gap-2">
+        <FilterSheetTrigger activeCount={activeCount} onClick={openSheet} />
+        <FilterSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          activeCount={activeCount}
+          onClear={() => {
+            onChange('all');
+            setSheetOpen(false);
+          }}
+          onApply={() => {
+            onChange(draft);
+            setSheetOpen(false);
+          }}
         >
-          {f.label}
-        </button>
-      ))}
+          {FILTER_OPTIONS.map((f) => (
+            <FilterChip key={f.id} active={draft === f.id} onClick={() => setDraft(f.id)}>
+              {f.label}
+            </FilterChip>
+          ))}
+        </FilterSheet>
+        {active !== 'all' && (
+          <span className="text-xs text-muted-foreground">
+            {FILTER_OPTIONS.find((f) => f.id === active)?.label}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

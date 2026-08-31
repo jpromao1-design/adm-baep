@@ -6,6 +6,9 @@ export default {
       fontFamily: {
         inter: ['Inter', 'system-ui', 'sans-serif'],
       },
+      screens: {
+        xs: '390px',
+      },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
@@ -22,12 +25,24 @@ export default {
         },
         accent: 'hsl(var(--accent))',
         border: 'hsl(var(--border))',
+        ring: 'hsl(var(--ring))',
         destructive: 'hsl(var(--destructive))',
+        success: 'hsl(var(--success))',
+        warning: 'hsl(var(--warning))',
+        info: 'hsl(var(--info))',
       },
       borderRadius: {
-        xl: '0.9rem',
-        '2xl': '1.1rem',
-        '3xl': '1.5rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
+        '3xl': '1.25rem',
+      },
+      boxShadow: {
+        card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+        elevated: '0 4px 12px -2px rgb(0 0 0 / 0.08)',
+      },
+      spacing: {
+        sidebar: 'var(--sidebar-width)',
+        'sidebar-collapsed': 'var(--sidebar-collapsed)',
       },
     },
   },

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ListTodo } from 'lucide-react';
 import { Input, Label } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Login() {
@@ -20,20 +21,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center px-4">
-      <form onSubmit={submit} className="w-full max-w-sm bg-card border border-border rounded-3xl p-6 space-y-4">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <ListTodo className="w-5 h-5 text-white" />
+    <div className="min-h-dvh flex items-center justify-center px-4 py-8">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 space-y-4 shadow-elevated"
+        aria-labelledby="login-title"
+      >
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center">
+            <ListTodo className="w-5 h-5 text-white" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-lg font-bold">Adm BAEP</h1>
+            <h1 id="login-title" className="text-lg font-bold">
+              Adm BAEP
+            </h1>
             <p className="text-xs text-muted-foreground">8º BAEP · acesso restrito</p>
           </div>
         </div>
 
         {(error || authError?.type === 'user_not_registered') && (
-          <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-3 py-2">
+          <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2" role="alert">
             {authError?.type === 'user_not_registered'
               ? 'Este e-mail não está autorizado. Solicite inclusão na seção.'
               : error}
@@ -41,20 +48,23 @@ export default function Login() {
         )}
 
         <div className="space-y-1">
-          <Label>E-mail</Label>
-          <Input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Label htmlFor="email">E-mail</Label>
+          <Input id="email" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="space-y-1">
-          <Label>Senha</Label>
-          <Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Label htmlFor="password">Senha</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading ? 'Entrando…' : 'Entrar'}
-        </button>
+        </Button>
       </form>
     </div>
   );

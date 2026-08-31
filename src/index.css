@@ -14,7 +14,19 @@
   --muted-foreground: 215 16% 40%;
   --accent: 210 40% 96%;
   --border: 214 32% 91%;
+  --ring: 221 83% 40%;
   --destructive: 0 72% 51%;
+  --success: 142 71% 35%;
+  --warning: 32 95% 44%;
+  --info: 199 89% 40%;
+  --sidebar-width: 17.5rem;
+  --sidebar-collapsed: 4.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+  }
 }
 
 * {
@@ -29,7 +41,7 @@ body,
 }
 
 body {
-  @apply bg-background text-foreground;
+  @apply bg-background text-foreground font-inter antialiased;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
 }
 
@@ -40,6 +52,44 @@ button {
   font: inherit;
 }
 
+@layer base {
+  h1 {
+    @apply text-2xl font-bold tracking-tight text-foreground;
+  }
+
+  h2 {
+    @apply text-lg font-bold tracking-tight text-foreground;
+  }
+
+  h3 {
+    @apply text-base font-semibold text-foreground;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply w-full max-w-2xl mx-auto px-4 pt-4 pb-4;
+  }
+
+  @media (min-width: 1024px) {
+    .page-container {
+      @apply max-w-6xl px-6 pt-6;
+    }
+  }
+
+  .section-title {
+    @apply text-sm font-bold text-foreground flex items-center gap-2;
+  }
+
+  .touch-target {
+    @apply min-h-11 min-w-11 inline-flex items-center justify-center;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+}
+
 button,
 a,
 [role='button'] {
@@ -48,7 +98,19 @@ a,
 
 @media (min-width: 768px) {
   button.icon-btn,
-  a.icon-btn {
+  a.icon-btn,
+  .table-action {
     min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

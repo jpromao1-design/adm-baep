@@ -1,93 +1,131 @@
-import React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { MapPin, Pencil, Trash2, Users, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Pencil, Trash2, Users } from 'lucide-react';
+import { ModalShell } from '@/components/ui/modal-shell';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { DeadlineIndicator } from '@/components/ui/deadline-indicator';
 import { formatDate } from '@/lib/dates';
 import { TYPE_LABELS } from '@/lib/task-status';
 import { getAuxiliar } from '@/lib/sections';
 import { RECURRENCE_LABELS } from '@/lib/recurrence';
 import { StatusBadge } from './StatusBadge';
 
+function DetailSection({ title, children }) {
+  if (!children) return null;
+  return (
+    <section className="space-y-1.5">
+      <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</h3>
+      <div className="text-sm text-foreground">{children}</div>
+    </section>
+  );
+}
+
 export function TaskViewModal({ open, onClose, task, onEdit, onDelete }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   if (!task) return null;
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-[70] flex items-end md:items-center justify-center p-0 md:p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="Fechar" />
-          <motion.div
-            initial={{ y: 24, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 24, opacity: 0 }}
-            className="relative w-full max-w-lg bg-card rounded-t-3xl md:rounded-3xl border border-border p-5 space-y-4"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">{TYPE_LABELS[task.type] || task.type}</p>
-                <h2 className="text-lg font-bold text-foreground leading-tight">{task.title}</h2>
-              </div>
-              <button type="button" onClick={onClose} className="p-2 rounded-xl hover:bg-muted">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await onDelete(task.id);
+      onClose();
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
 
-            <div className="flex flex-wrap gap-2">
-              <StatusBadge task={task} />
-              {task.section && (
-                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{task.section}</span>
-              )}
-            </div>
-
-            <div className="space-y-2 text-sm text-muted-foreground">
-              {(task._occurrenceDate || task.due_date || task.event_date) && (
-                <p>Prazo: {formatDate(task._occurrenceDate || task.event_date || task.due_date)}</p>
-              )}
-              {task.event_time && <p>Horário: {task.event_time}</p>}
-              {task.location && (
-                <p className="flex items-center gap-2"><MapPin className="w-4 h-4" /> {task.location}</p>
-              )}
-              {getAuxiliar(task) && (
-                <p className="flex items-center gap-2"><Users className="w-4 h-4" /> Auxiliar: {getAuxiliar(task)}</p>
-              )}
-              {task.is_recurring && <p>Recorrência: {RECURRENCE_LABELS[task.recurrence] || task.recurrence}</p>}
-              {task.description && <p className="text-foreground whitespace-pre-wrap">{task.description}</p>}
-              {task.observations && <p className="whitespace-pre-wrap">{task.observations}</p>}
-              {task.notes && <p className="whitespace-pre-wrap">{task.notes}</p>}
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              {onDelete && (
-                <button
-                  type="button"
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/5"
-                  onClick={async () => {
-                    if (window.confirm('Excluir esta tarefa?')) {
-                      await onDelete(task.id);
-                      onClose();
-                    }
-                  }}
-                >
-                  <Trash2 className="w-4 h-4" /> Excluir
-                </button>
-              )}
-              {onEdit && (
-                <button
-                  type="button"
-                  onClick={() => onEdit(task)}
-                  className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold"
-                >
-                  <Pencil className="w-4 h-4" /> Editar
-                </button>
-              )}
-            </div>
-          </motion.div>
-        </motion.div>
+  const footer = (
+    <div className="flex gap-2">
+      {onDelete && (
+        <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+          <Trash2 className="w-4 h-4" /> Excluir
+        </Button>
       )}
-    </AnimatePresence>
+      {onEdit && (
+        <Button className="ml-auto" onClick={() => onEdit(task)}>
+          <Pencil className="w-4 h-4" /> Editar
+        </Button>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <ModalShell open={open} onClose={onClose} title={task.title} size="md" footer={footer}>
+        <div className="space-y-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="primary">{TYPE_LABELS[task.type] || task.type}</Badge>
+            <StatusBadge task={task} />
+            {task.section && <Badge variant="info">{task.section}</Badge>}
+          </div>
+
+          <DeadlineIndicator task={task} />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(task._occurrenceDate || task.due_date || task.event_date) && (
+              <DetailSection title="Data">
+                <p>{formatDate(task._occurrenceDate || task.event_date || task.due_date)}</p>
+              </DetailSection>
+            )}
+            {task.event_time && (
+              <DetailSection title="Horário">
+                <p>{task.event_time}</p>
+              </DetailSection>
+            )}
+            {task.location && (
+              <DetailSection title="Local">
+                <p className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  {task.location}
+                </p>
+              </DetailSection>
+            )}
+            {getAuxiliar(task) && (
+              <DetailSection title="Auxiliar">
+                <p className="flex items-center gap-2">
+                  <Users className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  {getAuxiliar(task)}
+                </p>
+              </DetailSection>
+            )}
+            {task.is_recurring && (
+              <DetailSection title="Recorrência">
+                <p>{RECURRENCE_LABELS[task.recurrence] || task.recurrence}</p>
+              </DetailSection>
+            )}
+          </div>
+
+          {task.description && (
+            <DetailSection title="Descrição">
+              <p className="whitespace-pre-wrap">{task.description}</p>
+            </DetailSection>
+          )}
+          {task.observations && (
+            <DetailSection title="Observações">
+              <p className="whitespace-pre-wrap text-muted-foreground">{task.observations}</p>
+            </DetailSection>
+          )}
+          {task.notes && (
+            <DetailSection title="Notas">
+              <p className="whitespace-pre-wrap text-muted-foreground">{task.notes}</p>
+            </DetailSection>
+          )}
+        </div>
+      </ModalShell>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Excluir tarefa?"
+        description="Esta ação não pode ser desfeita. O registro será removido permanentemente."
+        confirmLabel="Excluir"
+        loading={deleting}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setConfirmDelete(false)}
+      />
+    </>
   );
 }
