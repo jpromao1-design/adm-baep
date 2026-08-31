@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createTask, createTasks, deleteTask, listTasks, stripMeta, updateTask } from '@/api/tasks';
+import { createTask, createTasks, deleteTask, isDomOrEvent, listTasks, stripMeta, updateTask } from '@/api/tasks';
 import { toast } from '@/components/ui/toaster';
 
 export function useTasks(limit = 500) {
@@ -31,6 +31,9 @@ export function useTasks(limit = 500) {
   });
 
   const handleSave = async (form) => {
+    if (isDomOrEvent(form)) {
+      throw new Error('Dados do formulário inválidos.');
+    }
     const data = stripMeta(form);
     if (typeof form?.id === 'string' && form.id) {
       await updateMutation.mutateAsync({ id: form.id, data });

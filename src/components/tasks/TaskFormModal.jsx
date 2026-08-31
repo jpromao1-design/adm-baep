@@ -66,10 +66,12 @@ function formFromSource(task) {
 export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const isEvent = form.type === 'evento' || form.type === 'compromisso';
 
   useEffect(() => {
     if (!open) return;
+    setError('');
     setForm(formFromSource(task));
   }, [open, task]);
 
@@ -78,6 +80,7 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
   const saveRecord = async () => {
     if (!String(form.title || '').trim()) return;
     setSaving(true);
+    setError('');
     try {
       const payload = {
         id: typeof form.id === 'string' ? form.id : undefined,
@@ -104,6 +107,8 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
       };
       await onSave(payload);
       onClose();
+    } catch (err) {
+      setError(err?.message || 'Não foi possível salvar.');
     } finally {
       setSaving(false);
     }
@@ -139,6 +144,10 @@ export function TaskFormModal({ open, onClose, task, onSave, onDelete }) {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {error && (
+              <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-3 py-2">{error}</p>
+            )}
 
             <div className="space-y-1">
               <Label>Título</Label>

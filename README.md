@@ -77,6 +77,6 @@ Não commite o arquivo `.env`.
 
 ## 6. Depois do Authentication
 
-Rode `supabase/link-auth-users.sql`, `supabase/migration-secao-auxiliar.sql` e `supabase/migration-password-change.sql`.
+Rode `supabase/link-auth-users.sql`, `supabase/migration-secao-auxiliar.sql`, `supabase/migration-password-change.sql` e `supabase/migration-audit.sql`.
 
 O auxiliar Sargento Souza (`rogeriopolmil@gmail.com`) entra com a senha inicial e é obrigado a alterar antes de usar o sistema. A senha nova é gravada com hash pelo Authentication do Supabase.
