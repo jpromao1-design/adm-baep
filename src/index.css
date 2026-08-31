@@ -68,7 +68,17 @@ button {
 
 @layer components {
   .page-container {
-    @apply w-full max-w-2xl mx-auto px-4 pt-4 pb-4;
+    @apply w-full max-w-2xl mx-auto px-4 pt-3 pb-4;
+  }
+
+  .dashboard-page {
+    @apply pt-0 md:pt-4;
+  }
+
+  @media (max-width: 767px) {
+    .dashboard-page {
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
   }
 
   @media (min-width: 1024px) {

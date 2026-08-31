@@ -22,6 +22,13 @@ export function formatDate(value) {
   return format(d, "dd/MM/yyyy", { locale: ptBR });
 }
 
+/** Formato compacto para cards mobile: `01 SET` */
+export function formatDateShort(value) {
+  const d = parseDateOnly(value);
+  if (!d) return '';
+  return format(d, 'dd MMM', { locale: ptBR }).replace('.', '').toUpperCase();
+}
+
 export function formatDateLong(value) {
   const d = value instanceof Date ? value : parseDateOnly(value);
   if (!d) return '';

@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { addDays, startOfDay } from 'date-fns';
 import { ListTodo, Plus } from 'lucide-react';
-import { NotificationBell } from '@/components/dashboard/NotificationBell';
 import { NotificationBanner } from '@/components/dashboard/NotificationBanner';
-import { StatsRow } from '@/components/dashboard/StatsRow';
+import { StatsRow, StatsRowDesktopIO } from '@/components/dashboard/StatsRow';
+import { MobileDashboardHeader } from '@/components/dashboard/MobileDashboardHeader';
+import { SectionHeader } from '@/components/dashboard/SectionHeader';
+import { DeadlineCard, DueSoonEmpty } from '@/components/dashboard/DeadlineCard';
+import { NotificationBell } from '@/components/dashboard/NotificationBell';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { TaskFormModal } from '@/components/tasks/TaskFormModal';
-import { TaskIOBar } from '@/components/tasks/TaskIOBar';
 import { TaskViewModal } from '@/components/tasks/TaskViewModal';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageLoadingState } from '@/components/ui/loading-state';
@@ -21,40 +22,6 @@ import { checkAndNotifyTasks, requestNotificationPermission } from '@/lib/notifi
 import { expandRecurringTasks, isOccurrenceCompleted } from '@/lib/recurrence';
 import { getTaskDate, toDateStr, todayStr, formatDateLong } from '@/lib/dates';
 import { isOverdue } from '@/lib/task-status';
-
-function DashboardSection({ id, title, count, tone = 'default', linkTo, children }) {
-  const titleClass =
-    tone === 'danger'
-      ? 'text-destructive'
-      : tone === 'warning'
-        ? 'text-warning'
-        : tone === 'info'
-          ? 'text-info'
-          : 'text-foreground';
-
-  return (
-    <section id={id} aria-labelledby={`${id}-title`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <h2 id={`${id}-title`} className={`section-title ${titleClass}`}>
-            {title}
-          </h2>
-          <span className="bg-muted text-muted-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-            {count}
-          </span>
-        </div>
-        {linkTo && (
-          <Link to={linkTo} className="text-xs text-primary font-semibold hover:underline focus-ring rounded">
-            Ver todas →
-          </Link>
-        )}
-      </div>
-      <div className="space-y-2">
-        <AnimatePresence>{children}</AnimatePresence>
-      </div>
-    </section>
-  );
-}
 
 export default function Dashboard() {
   const { tasks, isLoading, handleSave, handleDelete, handleImport } = useTasks();
@@ -135,106 +102,160 @@ export default function Dashboard() {
   const dateLabel = formatDateLong(new Date());
 
   return (
-    <div className="page-container space-y-6">
-      <PageHeader
-        title="Início"
-        subtitle={dateLabel}
-        actions={
-          <>
-            <TaskIOBar tasks={tasks} onImport={handleImport} />
-            <NotificationBell tasks={tasks} />
-            <Button className="hidden md:inline-flex" onClick={() => modals.openNew()}>
-              <Plus className="w-4 h-4" /> Nova Tarefa
-            </Button>
-          </>
-        }
-      />
+    <div className="page-container dashboard-page space-y-5 md:space-y-6">
+      {/* Mobile: header dedicado */}
+      <MobileDashboardHeader tasks={tasks} onImport={handleImport} />
+
+      {/* Desktop: header tradicional */}
+      <div className="hidden md:block">
+        <PageHeader
+          title="Início"
+          subtitle={dateLabel}
+          actions={
+            <>
+              <StatsRowDesktopIO tasks={tasks} onImport={handleImport} />
+              <NotificationBell tasks={tasks} />
+              <Button onClick={() => modals.openNew()}>
+                <Plus className="w-4 h-4" /> Nova Tarefa
+              </Button>
+            </>
+          }
+        />
+      </div>
 
       <NotificationBanner
         overdueCount={overdueTasks.length}
         dueTodayCount={todayTasks.length}
         eventsToday={eventsToday.length}
       />
-      <StatsRow counts={counts} />
+
+      <div>
+        <h2 className="md:hidden text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">
+          Resumo
+        </h2>
+        <StatsRow counts={counts} />
+      </div>
+
+      {/* Vencendo em breve — destaque mobile */}
+      <section aria-labelledby="due-soon-title">
+        <SectionHeader
+          title="Vencendo em breve"
+          count={dueSoonTasks.length}
+          linkTo={dueSoonTasks.length > 0 ? '/tasks?filter=due_soon' : undefined}
+        />
+        {dueSoonTasks.length > 0 ? (
+          <div className="space-y-2 md:hidden">
+            {dueSoonTasks.map((t) => (
+              <DeadlineCard
+                key={`${t.id}-${t._occurrenceDate || 'base'}`}
+                task={t}
+                onClick={modals.openView}
+              />
+            ))}
+          </div>
+        ) : (
+          <DueSoonEmpty />
+        )}
+        {dueSoonTasks.length > 0 && (
+          <div className="hidden md:block space-y-2">
+            <AnimatePresence>
+              {dueSoonTasks.map((t) => (
+                <TaskCard
+                  key={`${t.id}-${t._occurrenceDate || 'base'}`}
+                  task={t}
+                  onClick={modals.openView}
+                  onToggleComplete={handleToggleComplete}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </section>
 
       {overdueTasks.length > 0 && (
-        <DashboardSection
-          id="section-atrasadas"
-          title="Vencidas"
-          count={overdueTasks.length}
-          tone="danger"
-          linkTo={overdueTasks.length > 5 ? '/tasks?filter=overdue' : undefined}
-        >
-          {overdueTasks.slice(0, 5).map((t) => (
-            <TaskCard key={t.id} task={t} onClick={modals.openView} onToggleComplete={handleToggleComplete} />
-          ))}
-        </DashboardSection>
+        <section id="section-atrasadas" aria-labelledby="overdue-title">
+          <SectionHeader
+            title="Vencidas"
+            count={overdueTasks.length}
+            linkTo={overdueTasks.length > 5 ? '/tasks?filter=overdue' : undefined}
+          />
+          <div className="space-y-2">
+            <AnimatePresence>
+              {overdueTasks.slice(0, 5).map((t) => (
+                <React.Fragment key={t.id}>
+                  <div className="md:hidden">
+                    <DeadlineCard task={t} onClick={modals.openView} />
+                  </div>
+                  <div className="hidden md:block">
+                    <TaskCard task={t} onClick={modals.openView} onToggleComplete={handleToggleComplete} />
+                  </div>
+                </React.Fragment>
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
       )}
 
       {todayTasks.length > 0 && (
-        <DashboardSection id="section-hoje" title="Hoje" count={todayTasks.length} linkTo="/tasks?filter=today">
-          {todayTasks.map((t) => (
-            <TaskCard
-              key={`${t.id}-${t._occurrenceDate || 'base'}`}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-            />
-          ))}
-        </DashboardSection>
-      )}
-
-      {dueSoonTasks.length > 0 && (
-        <DashboardSection
-          id="section-andamento"
-          title="Vencendo em breve"
-          count={dueSoonTasks.length}
-          tone="warning"
-          linkTo="/tasks?filter=due_soon"
-        >
-          {dueSoonTasks.map((t) => (
-            <TaskCard
-              key={`${t.id}-${t._occurrenceDate || 'base'}`}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-            />
-          ))}
-        </DashboardSection>
+        <section id="section-hoje" aria-labelledby="today-title">
+          <SectionHeader title="Hoje" count={todayTasks.length} linkTo="/tasks?filter=today" />
+          <div className="space-y-2">
+            <AnimatePresence>
+              {todayTasks.map((t) => (
+                <TaskCard
+                  key={`${t.id}-${t._occurrenceDate || 'base'}`}
+                  task={t}
+                  onClick={modals.openView}
+                  onToggleComplete={handleToggleComplete}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
       )}
 
       {eventsToday.length > 0 && (
-        <DashboardSection title="Eventos de hoje" count={eventsToday.length} tone="info" linkTo="/calendar">
-          {eventsToday.map((t) => (
-            <TaskCard
-              key={`${t.id}-${t._occurrenceDate || 'base'}`}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-            />
-          ))}
-        </DashboardSection>
+        <section aria-labelledby="events-title">
+          <SectionHeader title="Eventos de hoje" count={eventsToday.length} linkTo="/calendar" />
+          <div className="space-y-2">
+            <AnimatePresence>
+              {eventsToday.map((t) => (
+                <TaskCard
+                  key={`${t.id}-${t._occurrenceDate || 'base'}`}
+                  task={t}
+                  onClick={modals.openView}
+                  onToggleComplete={handleToggleComplete}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
       )}
 
       {recentDone.length > 0 && (
-        <DashboardSection id="section-concluidas" title="Concluídas recentemente" count={recentDone.length}>
-          {recentDone.map((t) => (
-            <TaskCard
-              key={`${t.id}-${t._occurrenceDate || 'done'}`}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-              compact
-            />
-          ))}
-        </DashboardSection>
+        <section id="section-concluidas" aria-labelledby="done-title">
+          <SectionHeader title="Concluídas recentemente" count={recentDone.length} />
+          <div className="space-y-2">
+            <AnimatePresence>
+              {recentDone.map((t) => (
+                <TaskCard
+                  key={`${t.id}-${t._occurrenceDate || 'done'}`}
+                  task={t}
+                  onClick={modals.openView}
+                  onToggleComplete={handleToggleComplete}
+                  compact
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        </section>
       )}
 
       {tasks.length === 0 && (
         <EmptyState
           icon={ListTodo}
           title="Nenhuma tarefa cadastrada"
-          description="Crie a primeira tarefa ou importe registros de uma planilha Excel/CSV."
+          description="Crie a primeira tarefa ou importe registros pelo menu ⋮."
           actionLabel="Criar primeira tarefa"
           onAction={() => modals.openNew()}
         />

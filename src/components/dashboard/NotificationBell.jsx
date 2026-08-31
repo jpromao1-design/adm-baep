@@ -63,7 +63,7 @@ export function NotificationBell({ tasks = [] }) {
       <button
         type="button"
         aria-expanded={open}
-        aria-label="Alertas de prazo"
+        aria-label="Notificações"
         onClick={() => {
           if (!open && notifications.length > 0) {
             const next = new Set(readIds);

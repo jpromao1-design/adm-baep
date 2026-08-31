@@ -26,6 +26,7 @@ const NAV_ITEMS = [
 ];
 
 const SIDEBAR_KEY = 'adm-baep-sidebar-collapsed';
+const isDashboard = (path) => path === '/';
 
 export function AppLayout() {
   const location = useLocation();
@@ -34,6 +35,7 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_KEY) === '1');
   const [moreOpen, setMoreOpen] = useState(false);
   const meta = getRouteMeta(location.pathname);
+  const onDashboard = isDashboard(location.pathname);
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
@@ -45,25 +47,27 @@ export function AppLayout() {
 
   return (
     <div className="min-h-dvh bg-background">
-      {/* Mobile header */}
-      <header className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold text-primary uppercase tracking-wide">Adm BAEP</p>
-            <h1 className="text-base font-bold truncate">{meta.title}</h1>
+      {/* Mobile header — oculto no dashboard (header próprio) */}
+      {!onDashboard && (
+        <header className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/60 px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-primary uppercase tracking-wide">Adm BAEP</p>
+              <h1 className="text-base font-bold truncate">{meta.title}</h1>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMoreOpen(true)}
+              className="touch-target rounded-xl hover:bg-muted text-muted-foreground focus-ring"
+              aria-label="Mais opções"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setMoreOpen(true)}
-            className="touch-target rounded-xl hover:bg-muted text-muted-foreground"
-            aria-label="Mais opções"
-          >
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+        </header>
+      )}
 
-      <main className={cn('pb-28 md:pb-8 transition-[padding] duration-200', sidebarWidth)}>
+      <main className={cn('pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 transition-[padding] duration-200', sidebarWidth)}>
         <Outlet />
       </main>
 
@@ -158,12 +162,12 @@ export function AppLayout() {
 
       {/* Mobile bottom navigation */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-3"
-        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-2"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
         aria-label="Navegação principal"
       >
-        <div className="bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-elevated">
-          <div className="flex items-end justify-around px-1 py-1">
+        <div className="bg-card border border-border/80 rounded-2xl shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+          <div className="flex items-center justify-around px-0.5 py-1">
             {NAV_ITEMS.slice(0, 2).map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -171,20 +175,20 @@ export function AppLayout() {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    'flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-xl min-w-[56px] min-h-11 focus-ring',
+                    'flex flex-col items-center justify-center gap-0.5 py-1.5 flex-1 min-h-[52px] rounded-xl focus-ring',
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
-                  <div className={cn('w-9 h-9 flex items-center justify-center rounded-xl', isActive && 'bg-primary/10')}>
-                    <item.icon className={cn('w-5 h-5', isActive && 'stroke-[2.5]')} />
-                  </div>
-                  <span className="text-[10px] font-semibold">{item.label}</span>
+                  <item.icon className={cn('w-[22px] h-[22px]', isActive && 'stroke-[2.5]')} />
+                  <span className={cn('text-[10px] font-semibold leading-none', isActive && 'text-primary')}>
+                    {item.label}
+                  </span>
                 </Link>
               );
             })}
             <Link
               to="/tasks?new=true"
-              className="flex items-center justify-center w-12 h-12 -mt-5 mb-0.5 bg-primary text-primary-foreground rounded-2xl shadow-elevated active:scale-95 transition-transform focus-ring"
+              className="flex items-center justify-center w-11 h-11 -mt-4 mx-1 bg-primary text-primary-foreground rounded-full shadow-md active:scale-95 transition-transform focus-ring"
               aria-label="Nova tarefa"
             >
               <Plus className="w-5 h-5 stroke-[2.5]" />
@@ -196,14 +200,14 @@ export function AppLayout() {
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    'flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-xl min-w-[56px] min-h-11 focus-ring',
+                    'flex flex-col items-center justify-center gap-0.5 py-1.5 flex-1 min-h-[52px] rounded-xl focus-ring',
                     isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
-                  <div className={cn('w-9 h-9 flex items-center justify-center rounded-xl', isActive && 'bg-primary/10')}>
-                    <item.icon className={cn('w-5 h-5', isActive && 'stroke-[2.5]')} />
-                  </div>
-                  <span className="text-[10px] font-semibold">{item.label}</span>
+                  <item.icon className={cn('w-[22px] h-[22px]', isActive && 'stroke-[2.5]')} />
+                  <span className={cn('text-[10px] font-semibold leading-none', isActive && 'text-primary')}>
+                    {item.label}
+                  </span>
                 </Link>
               );
             })}
@@ -211,8 +215,8 @@ export function AppLayout() {
         </div>
       </nav>
 
-      {/* Mobile "Mais" drawer */}
-      {moreOpen && (
+      {/* Mobile "Mais" drawer — outras páginas */}
+      {moreOpen && !onDashboard && (
         <div className="md:hidden fixed inset-0 z-[60]">
           <button type="button" className="absolute inset-0 bg-black/45" onClick={() => setMoreOpen(false)} aria-label="Fechar" />
           <div
@@ -221,7 +225,7 @@ export function AppLayout() {
           >
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold">Mais opções</h2>
-              <button type="button" onClick={() => setMoreOpen(false)} className="touch-target rounded-xl hover:bg-muted">
+              <button type="button" onClick={() => setMoreOpen(false)} className="touch-target rounded-xl hover:bg-muted focus-ring">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -242,9 +246,6 @@ export function AppLayout() {
             >
               <LogOut className="w-5 h-5" /> Sair
             </button>
-            <p className="text-[11px] text-muted-foreground text-center pt-3">
-              Atalho: pressione <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">/</kbd> para buscar
-            </p>
           </div>
         </div>
       )}

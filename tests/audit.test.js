@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { toTaskRow, isDomOrEvent } from '../src/api/tasks.js';
-import { parseDateOnly, toDateStr } from '../src/lib/dates.js';
+import { parseDateOnly, toDateStr, formatDateShort } from '../src/lib/dates.js';
 import { evaluatePassword } from '../src/lib/password.js';
 
 describe('isDomOrEvent', () => {
@@ -49,6 +49,12 @@ describe('parseDateOnly', () => {
 
   it('formata de volta sem deslocar dia', () => {
     expect(toDateStr(parseDateOnly('2026-08-21'))).toBe('2026-08-21');
+  });
+});
+
+describe('formatDateShort', () => {
+  it('formata data compacta em português', () => {
+    expect(formatDateShort('2026-09-01')).toMatch(/01 SET/i);
   });
 });
 
