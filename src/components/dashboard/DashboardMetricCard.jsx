@@ -5,23 +5,19 @@ import { cn } from '@/lib/utils';
 const VARIANTS = {
   primary: {
     icon: 'text-primary bg-primary/10',
-    accent: 'group-hover:border-primary/25',
-    active: 'border-primary/20',
+    active: 'border-primary/25',
   },
   info: {
     icon: 'text-info bg-info/10',
-    accent: 'group-hover:border-info/25',
-    active: 'border-info/20',
+    active: 'border-info/25',
   },
   success: {
     icon: 'text-success bg-success/10',
-    accent: 'group-hover:border-success/25',
-    active: 'border-success/20',
+    active: 'border-success/25',
   },
   destructive: {
     icon: 'text-destructive bg-destructive/10',
-    accent: 'group-hover:border-destructive/25',
-    active: 'border-destructive/20',
+    active: 'border-destructive/30',
   },
 };
 
@@ -34,11 +30,10 @@ export function DashboardMetricCard({ icon: Icon, label, value, variant = 'prima
     <Link
       to={`/tasks?filter=${filter}`}
       className={cn(
-        'group flex flex-col justify-between h-[7.25rem] bg-card rounded-xl p-3.5 border border-border/80',
-        'transition-all active:scale-[0.98] focus-ring',
-        showEmphasis ? styles.active : 'border-border/60',
-        styles.accent,
-        'hover:bg-muted/30'
+        'group flex flex-col justify-between h-[7rem] sm:h-[7.25rem] bg-card rounded-xl p-3',
+        'border transition-all active:scale-[0.98] focus-ring',
+        showEmphasis ? styles.active : 'border-border/50',
+        'hover:bg-muted/20'
       )}
     >
       <div className={cn('inline-flex w-8 h-8 items-center justify-center rounded-full', styles.icon)}>
@@ -47,13 +42,13 @@ export function DashboardMetricCard({ icon: Icon, label, value, variant = 'prima
       <div>
         <p
           className={cn(
-            'text-[1.75rem] leading-none font-bold tabular-nums tracking-tight',
+            'text-[1.625rem] sm:text-[1.75rem] leading-none font-bold tabular-nums tracking-tight',
             showEmphasis && variant === 'destructive' ? 'text-destructive' : 'text-foreground'
           )}
         >
           {value ?? 0}
         </p>
-        <p className="text-xs font-medium text-muted-foreground mt-1 leading-tight">{label}</p>
+        <p className="text-[13px] font-medium text-muted-foreground mt-1 leading-tight">{label}</p>
       </div>
     </Link>
   );

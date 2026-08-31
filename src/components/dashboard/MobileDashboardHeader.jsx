@@ -20,9 +20,9 @@ export function MobileDashboardHeader({ tasks, onImport }) {
       <header className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/60 -mx-4 px-4 pt-3 pb-3 mb-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h1 className="text-[1.375rem] font-bold tracking-tight text-foreground leading-tight">Dashboard</h1>
-            <p className="text-[13px] text-muted-foreground mt-0.5 capitalize truncate min-[360px]:hidden">{dateCompact}</p>
-            <p className="text-[13px] text-muted-foreground mt-0.5 capitalize truncate hidden min-[360px]:block">{dateLong}</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground leading-tight">Dashboard</h1>
+            <p className="text-[13px] text-muted-foreground mt-1 capitalize truncate min-[360px]:hidden">{dateCompact}</p>
+            <p className="text-[13px] text-muted-foreground mt-1 capitalize truncate hidden min-[360px]:block">{dateLong}</p>
           </div>
           <div className="flex items-center gap-0.5 shrink-0 -mr-1">
             <NotificationBell tasks={tasks} />

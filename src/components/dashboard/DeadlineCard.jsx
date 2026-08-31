@@ -5,6 +5,7 @@ import { TYPE_LABELS } from '@/lib/task-status';
 import { getAuxiliar } from '@/lib/sections';
 import { getDeadlineInfo } from '@/lib/deadline';
 import { formatDateShort, getTaskDate } from '@/lib/dates';
+import { StatusBadge } from '@/components/tasks/StatusBadge';
 
 const DEADLINE_ICONS = {
   overdue: AlertTriangle,
@@ -35,31 +36,32 @@ export function DeadlineCard({ task, onClick }) {
       type="button"
       onClick={() => onClick?.(task)}
       className={cn(
-        'w-full text-left bg-card rounded-xl border border-border/70 p-3.5',
-        'transition-all active:scale-[0.99] hover:border-primary/20 focus-ring'
+        'w-full text-left bg-card rounded-xl border border-border/50 p-3.5',
+        'transition-all active:scale-[0.99] hover:border-border focus-ring'
       )}
     >
-      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-        {TYPE_LABELS[task.type] || task.type}
-      </p>
-      <p className="text-sm font-semibold text-foreground mt-0.5 line-clamp-2 leading-snug">{task.title}</p>
-      <div className={cn('flex items-center gap-1.5 mt-2 text-xs font-semibold', tone)}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          {TYPE_LABELS[task.type] || task.type}
+        </p>
+        <StatusBadge task={task} className="shrink-0 scale-90 origin-top-right" />
+      </div>
+      <p className="text-sm font-semibold text-foreground mt-1 line-clamp-2 leading-snug">{task.title}</p>
+      <div className={cn('flex items-center gap-1.5 mt-2.5 text-xs font-semibold', tone)}>
         <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
         <span>
           {info.label}
           {dateShort && ` · ${dateShort}`}
         </span>
       </div>
-      {auxiliar && (
-        <p className="text-xs text-muted-foreground mt-1.5 truncate">{auxiliar}</p>
-      )}
+      {auxiliar && <p className="text-xs text-muted-foreground mt-1.5 truncate">{auxiliar}</p>}
     </button>
   );
 }
 
 export function DueSoonEmpty() {
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3.5">
+    <div className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3.5">
       <CheckCircle2 className="w-5 h-5 text-success shrink-0 mt-0.5" aria-hidden="true" />
       <div>
         <p className="text-sm font-semibold text-foreground">Nenhum vencimento próximo</p>

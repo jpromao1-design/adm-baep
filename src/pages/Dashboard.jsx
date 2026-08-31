@@ -123,12 +123,6 @@ export default function Dashboard() {
         />
       </div>
 
-      <NotificationBanner
-        overdueCount={overdueTasks.length}
-        dueTodayCount={todayTasks.length}
-        eventsToday={eventsToday.length}
-      />
-
       <div>
         <h2 className="md:hidden text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">
           Resumo
@@ -136,9 +130,16 @@ export default function Dashboard() {
         <StatsRow counts={counts} />
       </div>
 
+      <NotificationBanner
+        overdueCount={overdueTasks.length}
+        dueTodayCount={todayTasks.length}
+        eventsToday={eventsToday.length}
+      />
+
       {/* Vencendo em breve — destaque mobile */}
       <section aria-labelledby="due-soon-title">
         <SectionHeader
+          id="due-soon-title"
           title="Vencendo em breve"
           count={dueSoonTasks.length}
           linkTo={dueSoonTasks.length > 0 ? '/tasks?filter=due_soon' : undefined}
