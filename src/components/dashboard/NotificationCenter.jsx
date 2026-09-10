@@ -35,25 +35,41 @@ export function NotificationCenter({ tasks = [] }) {
 
   useEffect(() => {
     if (!user?.id) return undefined;
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          setItems((prev) => [payload.new, ...prev].slice(0, 40));
-          if (Notification.permission === 'granted') {
-            try {
-              new Notification(payload.new.title, { body: payload.new.body || '', tag: payload.new.id });
-            } catch {
-              /* ignore */
+
+    // Strict Mode remonta o efeito; reusar o mesmo nome devolve canal já subscribed
+    // e .on() após subscribe() quebra o ErrorBoundary.
+    const topicPrefix = `notifications-${user.id}`;
+    for (const existing of supabase.getChannels()) {
+      if (existing.topic?.includes(topicPrefix)) {
+        void supabase.removeChannel(existing);
+      }
+    }
+
+    let channel;
+    try {
+      channel = supabase
+        .channel(`${topicPrefix}-${Math.random().toString(36).slice(2, 9)}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            setItems((prev) => [payload.new, ...prev].slice(0, 40));
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              try {
+                new Notification(payload.new.title, { body: payload.new.body || '', tag: payload.new.id });
+              } catch {
+                /* ignore */
+              }
             }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    } catch {
+      return undefined;
+    }
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [user?.id]);
 
