@@ -42,7 +42,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        cacheId: 'adm-baep-v13',
+        cacheId: 'adm-baep-v14',
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

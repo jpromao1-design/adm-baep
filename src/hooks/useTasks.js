@@ -51,11 +51,25 @@ export function useTasks(limit = 500) {
     await invalidate();
   };
 
+  const handleStatusChange = async (task, status) => {
+    if (!task?.id || (task.is_recurring && task._occurrenceDate)) {
+      toast({
+        title: 'Status indisponível',
+        description: 'Para ocorrências recorrentes, use concluir/reabrir no card.',
+        tone: 'warning',
+      });
+      return;
+    }
+    await updateMutation.mutateAsync({ id: task.id, data: { status } });
+    toast({ title: 'Status atualizado', tone: 'success' });
+  };
+
   return {
     tasks: query.data || [],
     isLoading: query.isLoading,
     handleSave,
     handleDelete,
     handleImport,
+    handleStatusChange,
   };
 }

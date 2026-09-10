@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Plus,
   Search,
+  Users,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -31,11 +32,15 @@ const isDashboard = (path) => path === '/';
 export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(SIDEBAR_KEY) === '1');
   const [moreOpen, setMoreOpen] = useState(false);
   const meta = getRouteMeta(location.pathname);
   const onDashboard = isDashboard(location.pathname);
+
+  const navItems = isAdmin
+    ? [...NAV_ITEMS, { path: '/users', icon: Users, label: 'Usuários' }]
+    : NAV_ITEMS;
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
@@ -91,7 +96,7 @@ export function AppLayout() {
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link
@@ -236,6 +241,15 @@ export function AppLayout() {
             >
               <KeyRound className="w-5 h-5 text-muted-foreground" /> Alterar senha
             </Link>
+            {isAdmin && (
+              <Link
+                to="/users"
+                onClick={() => setMoreOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted min-h-11"
+              >
+                <Users className="w-5 h-5 text-muted-foreground" /> Gestão de usuários
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => {

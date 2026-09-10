@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Pencil, Trash2, Users } from 'lucide-react';
+import { MapPin, MessageCircle, Pencil, Trash2, Users } from 'lucide-react';
 import { ModalShell } from '@/components/ui/modal-shell';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,9 @@ import { formatDate } from '@/lib/dates';
 import { TYPE_LABELS } from '@/lib/task-status';
 import { getAuxiliar } from '@/lib/sections';
 import { RECURRENCE_LABELS } from '@/lib/recurrence';
+import { openWhatsAppShare } from '@/lib/whatsapp';
 import { StatusBadge } from './StatusBadge';
+import { StatusQuickSelect } from './StatusQuickSelect';
 
 function DetailSection({ title, children }) {
   if (!children) return null;
@@ -21,7 +23,7 @@ function DetailSection({ title, children }) {
   );
 }
 
-export function TaskViewModal({ open, onClose, task, onEdit, onDelete }) {
+export function TaskViewModal({ open, onClose, task, onEdit, onDelete, onStatusChange }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -39,12 +41,15 @@ export function TaskViewModal({ open, onClose, task, onEdit, onDelete }) {
   };
 
   const footer = (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       {onDelete && (
         <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
           <Trash2 className="w-4 h-4" /> Excluir
         </Button>
       )}
+      <Button variant="outline" onClick={() => openWhatsAppShare(task)}>
+        <MessageCircle className="w-4 h-4" /> WhatsApp
+      </Button>
       {onEdit && (
         <Button className="ml-auto" onClick={() => onEdit(task)}>
           <Pencil className="w-4 h-4" /> Editar
@@ -59,7 +64,11 @@ export function TaskViewModal({ open, onClose, task, onEdit, onDelete }) {
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="primary">{TYPE_LABELS[task.type] || task.type}</Badge>
-            <StatusBadge task={task} />
+            {onStatusChange && !(task.is_recurring && task._occurrenceDate) ? (
+              <StatusQuickSelect value={task.status} onChange={(status) => onStatusChange(task, status)} />
+            ) : (
+              <StatusBadge task={task} />
+            )}
             {task.section && <Badge variant="info">{task.section}</Badge>}
           </div>
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MoreVertical } from 'lucide-react';
-import { NotificationBell } from './NotificationBell';
+import { NotificationCenter } from './NotificationCenter';
 import { DashboardActionsSheet } from './DashboardActionsSheet';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
@@ -25,7 +25,7 @@ export function MobileDashboardHeader({ tasks, onImport }) {
             <p className="text-[13px] text-muted-foreground mt-1 capitalize truncate hidden min-[360px]:block">{dateLong}</p>
           </div>
           <div className="flex items-center gap-0.5 shrink-0 -mr-1">
-            <NotificationBell tasks={tasks} />
+            <NotificationCenter tasks={tasks} />
             <Button
               variant="ghost"
               size="icon"

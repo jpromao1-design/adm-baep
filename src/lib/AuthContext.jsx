@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/api/supabaseClient';
 import { changePassword as updatePassword, isDefaultInitialPassword, requirePasswordChange } from '@/api/auth';
+import { touchLastLogin } from '@/api/users';
+import { can, isAdmin as checkIsAdmin } from '@/lib/permissions';
 
 const AuthContext = createContext(null);
 
@@ -20,17 +22,19 @@ export function AuthProvider({ children }) {
     }
     let { data, error } = await supabase
       .from('profiles')
-      .select('id, email, display_name, role, must_change_password')
+      .select('id, email, display_name, role, must_change_password, active, phone, unit, last_login_at')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (error && (error.code === '42703' || /must_change_password/i.test(error.message || ''))) {
+    if (error && (error.code === '42703' || /must_change_password|active|phone|unit|last_login/i.test(error.message || ''))) {
       const fallback = await supabase
         .from('profiles')
-        .select('id, email, display_name, role')
+        .select('id, email, display_name, role, must_change_password')
         .eq('id', user.id)
         .maybeSingle();
-      data = fallback.data ? { ...fallback.data, must_change_password: false } : null;
+      data = fallback.data
+        ? { ...fallback.data, active: true, phone: null, unit: null, last_login_at: null }
+        : null;
       error = fallback.error;
     }
 
@@ -45,11 +49,19 @@ export function AuthProvider({ children }) {
       await supabase.auth.signOut();
       return;
     }
+    if (data.active === false) {
+      setAuthError({ type: 'user_inactive', message: 'Sua conta está inativa. Contate o administrador.' });
+      setProfile(null);
+      await supabase.auth.signOut();
+      return;
+    }
     setAuthError(null);
     setProfile({
       ...data,
+      active: data.active !== false,
       must_change_password: Boolean(data.must_change_password) || forcePasswordChangeRef.current,
     });
+    void touchLastLogin();
   }, []);
 
   useEffect(() => {
@@ -107,6 +119,8 @@ export function AuthProvider({ children }) {
       authError,
       isAuthenticated: Boolean(session?.user && profile),
       mustChangePassword: Boolean(profile?.must_change_password),
+      isAdmin: checkIsAdmin(profile),
+      can: (permission) => can(profile, permission),
       signIn,
       signOut: () => supabase.auth.signOut(),
       changePassword,

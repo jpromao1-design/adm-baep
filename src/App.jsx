@@ -10,14 +10,16 @@ import Dashboard from '@/pages/Dashboard';
 import Tasks from '@/pages/Tasks';
 import CalendarPage from '@/pages/CalendarPage';
 import SearchPage from '@/pages/SearchPage';
+import UsersPage from '@/pages/UsersPage';
 import Login from '@/pages/Login';
+import RequestAccess from '@/pages/RequestAccess';
 import ChangePassword from '@/pages/ChangePassword';
 import PageNotFound from '@/pages/PageNotFound';
 import { InstallPWA } from '@/components/layout/InstallPWA';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 
 function AuthenticatedApp() {
-  const { isLoadingAuth, isAuthenticated, authError, mustChangePassword } = useAuth();
+  const { isLoadingAuth, isAuthenticated, authError, mustChangePassword, isAdmin } = useAuth();
 
   if (isLoadingAuth) {
     return <LoadingState label="Verificando acesso…" />;
@@ -27,6 +29,7 @@ function AuthenticatedApp() {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/solicitar-acesso" element={<RequestAccess />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
@@ -52,9 +55,11 @@ function AuthenticatedApp() {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/users" element={isAdmin ? <UsersPage /> : <Navigate to="/" replace />} />
         <Route path="/alterar-senha" element={<ChangePassword />} />
       </Route>
       <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/solicitar-acesso" element={<Navigate to="/" replace />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
