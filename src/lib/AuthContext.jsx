@@ -23,22 +23,42 @@ export function AuthProvider({ children }) {
       return { profile: null, error: null };
     }
 
+    // Colunas básicas primeiro — o login não quebra se migrations opcionais faltarem.
     let { data, error } = await supabase
       .from('profiles')
-      .select('id, email, display_name, role, must_change_password, active, phone, unit, last_login_at')
+      .select('id, email, display_name, role')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (error && (error.code === '42703' || /must_change_password|active|phone|unit|last_login/i.test(error.message || ''))) {
-      const fallback = await supabase
+    if (!error && data) {
+      const defaults = {
+        must_change_password: false,
+        active: true,
+        phone: null,
+        unit: null,
+        last_login_at: null,
+      };
+      let extended = await supabase
         .from('profiles')
-        .select('id, email, display_name, role, must_change_password')
+        .select('must_change_password, active, phone, unit, last_login_at')
         .eq('id', user.id)
         .maybeSingle();
-      data = fallback.data
-        ? { ...fallback.data, active: true, phone: null, unit: null, last_login_at: null }
-        : null;
-      error = fallback.error;
+      if (extended.error && (extended.error.code === '42703' || /must_change_password|active|phone|unit|last_login/i.test(extended.error.message || ''))) {
+        extended = await supabase
+          .from('profiles')
+          .select('active, phone, unit, last_login_at')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (extended.error && (extended.error.code === '42703' || /active|phone|unit|last_login/i.test(extended.error.message || ''))) {
+          data = { ...data, ...defaults };
+        } else {
+          data = { ...data, ...defaults, ...(extended.data || {}) };
+        }
+      } else if (!extended.error && extended.data) {
+        data = { ...data, ...defaults, ...extended.data };
+      } else {
+        data = { ...data, ...defaults };
+      }
     }
 
     if (error) {
