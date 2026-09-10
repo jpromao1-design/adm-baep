@@ -1,7 +1,15 @@
 -- =============================================================================
 -- Commit 007 — Gestão de usuários, solicitações de acesso e notificações
 -- Execute no SQL Editor do Supabase (produção).
+-- IMPORTANTE: colunas de profiles ANTES das funções que as referenciam.
 -- =============================================================================
+
+-- Extensões em profiles (deve rodar antes de is_admin / is_active_allowed_user)
+alter table public.profiles
+  add column if not exists active boolean not null default true,
+  add column if not exists phone text,
+  add column if not exists unit text,
+  add column if not exists last_login_at timestamptz;
 
 -- Helpers de papel
 create or replace function public.is_admin()
@@ -29,13 +37,6 @@ as $$
     where p.id = auth.uid() and coalesce(p.active, true)
   );
 $$;
-
--- Extensões em profiles
-alter table public.profiles
-  add column if not exists active boolean not null default true,
-  add column if not exists phone text,
-  add column if not exists unit text,
-  add column if not exists last_login_at timestamptz;
 
 -- Solicitações de acesso (inserção pública anônima)
 create table if not exists public.access_requests (
