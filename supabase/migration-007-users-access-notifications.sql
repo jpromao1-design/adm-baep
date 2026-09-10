@@ -455,7 +455,11 @@ create policy push_own on public.push_subscriptions
 drop policy if exists profiles_select_own_or_peer on public.profiles;
 create policy profiles_select_own_or_peer on public.profiles
   for select to authenticated
-  using (public.is_allowed_user() or public.is_admin());
+  using (
+    id = auth.uid()
+    or public.is_allowed_user()
+    or public.is_admin()
+  );
 
 drop policy if exists profiles_admin_update on public.profiles;
 create policy profiles_admin_update on public.profiles

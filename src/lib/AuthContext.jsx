@@ -12,14 +12,17 @@ export function AuthProvider({ children }) {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
   const forcePasswordChangeRef = useRef(false);
+  const retainAuthErrorRef = useRef(false);
 
   const loadProfile = useCallback(async (user) => {
     if (!user) {
       forcePasswordChangeRef.current = false;
       setProfile(null);
-      setAuthError(null);
-      return;
+      if (!retainAuthErrorRef.current) setAuthError(null);
+      retainAuthErrorRef.current = false;
+      return { profile: null, error: null };
     }
+
     let { data, error } = await supabase
       .from('profiles')
       .select('id, email, display_name, role, must_change_password, active, phone, unit, last_login_at')
@@ -39,29 +42,44 @@ export function AuthProvider({ children }) {
     }
 
     if (error) {
-      setAuthError({ type: 'profile_error', message: error.message });
+      const authErr = { type: 'profile_error', message: error.message || 'Erro ao carregar perfil.' };
+      retainAuthErrorRef.current = true;
+      setAuthError(authErr);
       setProfile(null);
-      return;
+      await supabase.auth.signOut();
+      return { profile: null, error: authErr };
     }
+
     if (!data) {
-      setAuthError({ type: 'user_not_registered' });
+      const authErr = {
+        type: 'user_not_registered',
+        message: 'Este e-mail não está autorizado. Solicite acesso abaixo.',
+      };
+      retainAuthErrorRef.current = true;
+      setAuthError(authErr);
       setProfile(null);
       await supabase.auth.signOut();
-      return;
+      return { profile: null, error: authErr };
     }
+
     if (data.active === false) {
-      setAuthError({ type: 'user_inactive', message: 'Sua conta está inativa. Contate o administrador.' });
+      const authErr = { type: 'user_inactive', message: 'Sua conta está inativa. Contate o administrador.' };
+      retainAuthErrorRef.current = true;
+      setAuthError(authErr);
       setProfile(null);
       await supabase.auth.signOut();
-      return;
+      return { profile: null, error: authErr };
     }
+
     setAuthError(null);
-    setProfile({
+    const nextProfile = {
       ...data,
       active: data.active !== false,
       must_change_password: Boolean(data.must_change_password) || forcePasswordChangeRef.current,
-    });
+    };
+    setProfile(nextProfile);
     void touchLastLogin();
+    return { profile: nextProfile, error: null };
   }, []);
 
   useEffect(() => {
@@ -87,8 +105,10 @@ export function AuthProvider({ children }) {
   }, [loadProfile]);
 
   const signIn = useCallback(async (email, password) => {
+    setAuthError(null);
     const result = await supabase.auth.signInWithPassword({ email, password });
     if (result.error) return result;
+
     forcePasswordChangeRef.current = isDefaultInitialPassword(password);
     if (forcePasswordChangeRef.current) {
       try {
@@ -97,7 +117,16 @@ export function AuthProvider({ children }) {
         // RPC disponível após migration-password-change.sql
       }
     }
-    await loadProfile(result.data.user);
+
+    const { profile: profileData, error: profileErr } = await loadProfile(result.data.user);
+    if (!profileData) {
+      return {
+        data: { user: null, session: null },
+        error: {
+          message: profileErr?.message || 'Não foi possível carregar seu perfil. Verifique se o e-mail está autorizado.',
+        },
+      };
+    }
     return result;
   }, [loadProfile]);
 
@@ -122,7 +151,11 @@ export function AuthProvider({ children }) {
       isAdmin: checkIsAdmin(profile),
       can: (permission) => can(profile, permission),
       signIn,
-      signOut: () => supabase.auth.signOut(),
+      signOut: () => {
+        retainAuthErrorRef.current = false;
+        setAuthError(null);
+        return supabase.auth.signOut();
+      },
       changePassword,
     }),
     [session, profile, isLoadingAuth, authError, signIn, changePassword]

@@ -67,13 +67,9 @@ export default function Login() {
           </div>
         </div>
 
-        {(error || authError?.type === 'user_not_registered' || authError?.type === 'user_inactive') && (
+        {(error || authError) && (
           <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-xl px-3 py-2" role="alert">
-            {authError?.type === 'user_not_registered'
-              ? 'Este e-mail não está autorizado. Solicite acesso abaixo.'
-              : authError?.type === 'user_inactive'
-                ? authError.message
-                : error}
+            {authError?.message || error}
           </p>
         )}
 
