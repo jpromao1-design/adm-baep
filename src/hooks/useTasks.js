@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createTask, createTasks, deleteTask, isDomOrEvent, listTasks, stripMeta, updateTask } from '@/api/tasks';
 import { toast } from '@/components/ui/toaster';
+import { STATUS_CONFIG } from '@/lib/task-status';
 
 export function useTasks(limit = 500) {
   const queryClient = useQueryClient();
+  const [statusBusyId, setStatusBusyId] = useState(null);
 
   const query = useQuery({
     queryKey: ['tasks'],
@@ -37,8 +40,10 @@ export function useTasks(limit = 500) {
     const data = stripMeta(form);
     if (typeof form?.id === 'string' && form.id) {
       await updateMutation.mutateAsync({ id: form.id, data });
+      toast({ title: 'Tarefa atualizada', tone: 'success' });
     } else {
       await createMutation.mutateAsync(data);
+      toast({ title: 'Tarefa criada', tone: 'success' });
     }
   };
 
@@ -60,13 +65,38 @@ export function useTasks(limit = 500) {
       });
       return;
     }
-    await updateMutation.mutateAsync({ id: task.id, data: { status } });
-    toast({ title: 'Status atualizado', tone: 'success' });
+    if (task.status === status) return;
+    if (statusBusyId === task.id) return;
+
+    const label = STATUS_CONFIG[status]?.label || status;
+    const previous = queryClient.getQueryData(['tasks']);
+    setStatusBusyId(task.id);
+    queryClient.setQueryData(['tasks'], (old) =>
+      (old || []).map((row) =>
+        row.id === task.id ? { ...row, status, updated_at: new Date().toISOString() } : row
+      )
+    );
+
+    try {
+      await updateTask(task.id, { status });
+      toast({ title: `Status atualizado para ${label}.`, tone: 'success' });
+      await invalidate();
+    } catch (err) {
+      queryClient.setQueryData(['tasks'], previous);
+      toast({
+        title: 'Não foi possível atualizar o status.',
+        description: err?.message,
+        tone: 'danger',
+      });
+    } finally {
+      setStatusBusyId(null);
+    }
   };
 
   return {
     tasks: query.data || [],
     isLoading: query.isLoading,
+    statusBusyId,
     handleSave,
     handleDelete,
     handleImport,

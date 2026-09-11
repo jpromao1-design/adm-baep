@@ -10,12 +10,22 @@ export const STATUS_CONFIG = {
   atrasado: { label: 'Atrasada', className: 'bg-rose-100 text-rose-700' },
 };
 
+/** Status persistidos no banco (CHECK). `atrasado` é só exibição calculada. */
+export const TASK_STATUS_VALUES = ['pendente', 'em_andamento', 'aguardando', 'concluido'];
+
 export const TYPE_LABELS = {
   tarefa: 'Tarefa',
   demanda: 'Demanda',
   evento: 'Evento',
   compromisso: 'Compromisso',
 };
+
+export function editAriaLabel(task) {
+  if (task?.type === 'demanda') return 'Editar demanda';
+  if (task?.type === 'evento') return 'Editar evento';
+  if (task?.type === 'compromisso') return 'Editar compromisso';
+  return 'Editar tarefa';
+}
 
 export function isTaskDone(task) {
   if (task.is_recurring && task._occurrenceDate) {

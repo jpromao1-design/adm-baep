@@ -5,7 +5,8 @@ import { TYPE_LABELS } from '@/lib/task-status';
 import { getAuxiliar } from '@/lib/sections';
 import { getDeadlineInfo } from '@/lib/deadline';
 import { formatDateShort, getTaskDate } from '@/lib/dates';
-import { StatusBadge } from '@/components/tasks/StatusBadge';
+import { TaskCardActions } from '@/components/tasks/TaskCardActions';
+import { useAuth } from '@/lib/AuthContext';
 
 const DEADLINE_ICONS = {
   overdue: AlertTriangle,
@@ -23,20 +24,37 @@ const DEADLINE_TONE = {
   ok: 'text-muted-foreground',
 };
 
-export function DeadlineCard({ task, onClick }) {
+export function DeadlineCard({
+  task,
+  onClick,
+  onStatusChange,
+  onEdit,
+  showQuickStatus = true,
+  statusBusy = false,
+}) {
+  const { can } = useAuth();
   const info = getDeadlineInfo(task);
   const Icon = DEADLINE_ICONS[info.variant] || Calendar;
   const tone = DEADLINE_TONE[info.variant] || 'text-muted-foreground';
   const auxiliar = getAuxiliar(task);
   const dateStr = getTaskDate(task);
   const dateShort = dateStr ? formatDateShort(dateStr) : null;
+  const canEdit = Boolean(onEdit) && can('manageTasks');
+  const canChangeStatus = Boolean(onStatusChange) && can('changeAnyStatus');
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onClick?.(task)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.(task);
+        }
+      }}
       className={cn(
-        'w-full text-left bg-card rounded-xl border border-border/50 p-3.5',
+        'w-full text-left bg-card rounded-xl border border-border/50 p-3.5 cursor-pointer',
         'transition-all active:scale-[0.99] hover:border-border focus-ring'
       )}
     >
@@ -44,7 +62,16 @@ export function DeadlineCard({ task, onClick }) {
         <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
           {TYPE_LABELS[task.type] || task.type}
         </p>
-        <StatusBadge task={task} className="shrink-0 scale-90 origin-top-right" />
+        <TaskCardActions
+          task={task}
+          onStatusChange={onStatusChange}
+          onEdit={onEdit}
+          showQuickStatus={showQuickStatus}
+          canChangeStatus={canChangeStatus}
+          canEdit={canEdit}
+          statusBusy={statusBusy}
+          className="scale-95 origin-top-right"
+        />
       </div>
       <p className="text-sm font-semibold text-foreground mt-1 line-clamp-2 leading-snug">{task.title}</p>
       <div className={cn('flex items-center gap-1.5 mt-2.5 text-xs font-semibold', tone)}>
@@ -55,7 +82,7 @@ export function DeadlineCard({ task, onClick }) {
         </span>
       </div>
       {auxiliar && <p className="text-xs text-muted-foreground mt-1.5 truncate">{auxiliar}</p>}
-    </button>
+    </div>
   );
 }
 

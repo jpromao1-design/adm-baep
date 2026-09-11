@@ -25,7 +25,7 @@ export default function Tasks() {
   const initialFilter = searchParams.get('filter') || 'all';
   const shouldOpenNew = searchParams.get('new') === 'true';
 
-  const { tasks, isLoading, handleSave, handleDelete, handleImport, handleStatusChange } = useTasks();
+  const { tasks, isLoading, statusBusyId, handleSave, handleDelete, handleImport, handleStatusChange } = useTasks();
   const modals = useTaskModals();
   const handleToggleComplete = useToggleComplete();
   const [filter, setFilter] = React.useState(initialFilter);
@@ -126,7 +126,9 @@ export default function Tasks() {
               onClick={modals.openView}
               onToggleComplete={handleToggleComplete}
               onStatusChange={handleStatusChange}
+              onEdit={modals.openEdit}
               showQuickStatus
+              statusBusy={statusBusyId === t.id}
             />
           ))}
         </AnimatePresence>

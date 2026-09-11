@@ -24,9 +24,19 @@ import { getTaskDate, toDateStr, todayStr, formatDateLong } from '@/lib/dates';
 import { isOverdue } from '@/lib/task-status';
 
 export default function Dashboard() {
-  const { tasks, isLoading, handleSave, handleDelete, handleImport, handleStatusChange } = useTasks();
+  const { tasks, isLoading, statusBusyId, handleSave, handleDelete, handleImport, handleStatusChange } = useTasks();
   const modals = useTaskModals();
   const handleToggleComplete = useToggleComplete();
+
+  const cardProps = (task) => ({
+    task,
+    onClick: modals.openView,
+    onToggleComplete: handleToggleComplete,
+    onStatusChange: handleStatusChange,
+    onEdit: modals.openEdit,
+    showQuickStatus: true,
+    statusBusy: statusBusyId === task.id,
+  });
 
   useEffect(() => {
     requestNotificationPermission();
@@ -147,11 +157,7 @@ export default function Dashboard() {
         {dueSoonTasks.length > 0 ? (
           <div className="space-y-2 md:hidden">
             {dueSoonTasks.map((t) => (
-              <DeadlineCard
-                key={`${t.id}-${t._occurrenceDate || 'base'}`}
-                task={t}
-                onClick={modals.openView}
-              />
+              <DeadlineCard key={`${t.id}-${t._occurrenceDate || 'base'}`} {...cardProps(t)} />
             ))}
           </div>
         ) : (
@@ -161,14 +167,7 @@ export default function Dashboard() {
           <div className="hidden md:block space-y-2">
             <AnimatePresence>
               {dueSoonTasks.map((t) => (
-            <TaskCard
-              key={`${t.id}-${t._occurrenceDate || 'base'}`}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-              onStatusChange={handleStatusChange}
-              showQuickStatus
-            />
+                <TaskCard key={`${t.id}-${t._occurrenceDate || 'base'}`} {...cardProps(t)} />
               ))}
             </AnimatePresence>
           </div>
@@ -187,16 +186,10 @@ export default function Dashboard() {
               {overdueTasks.slice(0, 5).map((t) => (
                 <React.Fragment key={t.id}>
                   <div className="md:hidden">
-                    <DeadlineCard task={t} onClick={modals.openView} />
+                    <DeadlineCard {...cardProps(t)} />
                   </div>
                   <div className="hidden md:block">
-                    <TaskCard
-                      task={t}
-                      onClick={modals.openView}
-                      onToggleComplete={handleToggleComplete}
-                      onStatusChange={handleStatusChange}
-                      showQuickStatus
-                    />
+                    <TaskCard {...cardProps(t)} />
                   </div>
                 </React.Fragment>
               ))}
@@ -211,14 +204,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             <AnimatePresence>
               {todayTasks.map((t) => (
-            <TaskCard
-              key={`${t.id}-${t._occurrenceDate || 'base'}`}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-              onStatusChange={handleStatusChange}
-              showQuickStatus
-            />
+                <TaskCard key={`${t.id}-${t._occurrenceDate || 'base'}`} {...cardProps(t)} />
               ))}
             </AnimatePresence>
           </div>
@@ -231,14 +217,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             <AnimatePresence>
               {eventsToday.map((t) => (
-            <TaskCard
-              key={`${t.id}-${t._occurrenceDate || 'base'}`}
-              task={t}
-              onClick={modals.openView}
-              onToggleComplete={handleToggleComplete}
-              onStatusChange={handleStatusChange}
-              showQuickStatus
-            />
+                <TaskCard key={`${t.id}-${t._occurrenceDate || 'base'}`} {...cardProps(t)} />
               ))}
             </AnimatePresence>
           </div>
@@ -251,13 +230,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             <AnimatePresence>
               {recentDone.map((t) => (
-                <TaskCard
-                  key={`${t.id}-${t._occurrenceDate || 'done'}`}
-                  task={t}
-                  onClick={modals.openView}
-                  onToggleComplete={handleToggleComplete}
-                  compact
-                />
+                <TaskCard key={`${t.id}-${t._occurrenceDate || 'done'}`} {...cardProps(t)} compact />
               ))}
             </AnimatePresence>
           </div>

@@ -80,3 +80,15 @@ Não commite o arquivo `.env`.
 Rode `supabase/link-auth-users.sql`, `supabase/migration-secao-auxiliar.sql`, `supabase/migration-password-change.sql` e `supabase/migration-audit.sql`.
 
 O auxiliar Sargento Souza (`rogeriopolmil@gmail.com`) entra com a senha inicial e é obrigado a alterar antes de usar o sistema. A senha nova é gravada com hash pelo Authentication do Supabase.
+
+## 7. Dashboard — status e edição nos cards (v1.2.0)
+
+Nos cards do Dashboard (e na lista mobile de Tarefas):
+
+- o **badge de status** abre um menu com os status do banco: `pendente`, `em_andamento`, `aguardando`, `concluido` (rótulos: Pendente, Em andamento, Aguardando, Concluída);
+- o ícone de **lápis** abre o mesmo `TaskFormModal` usado nas demais telas;
+- o **WhatsApp** permanece inalterado;
+- a atualização usa `updateTask` via `handleStatusChange` / `handleSave` (TanStack Query), com invalidação da query `tasks` e toast de feedback;
+- permissões de UI: `changeAnyStatus` e `manageTasks` (`src/lib/permissions.js`); a segurança efetiva continua na RLS do Supabase.
+
+Não há `service_role` no frontend.

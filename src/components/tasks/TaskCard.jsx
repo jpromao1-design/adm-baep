@@ -1,19 +1,29 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, MapPin, MessageCircle, Users } from 'lucide-react';
+import { CheckCircle2, Circle, MapPin, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TYPE_LABELS, isOverdue, isTaskDone } from '@/lib/task-status';
 import { getAuxiliar } from '@/lib/sections';
-import { StatusBadge } from './StatusBadge';
-import { StatusQuickSelect } from './StatusQuickSelect';
+import { TaskCardActions } from './TaskCardActions';
 import { DeadlineIndicator } from '@/components/ui/deadline-indicator';
 import { Badge } from '@/components/ui/badge';
-import { openWhatsAppShare } from '@/lib/whatsapp';
+import { useAuth } from '@/lib/AuthContext';
 
-export function TaskCard({ task, onClick, onToggleComplete, onStatusChange, compact = false, showQuickStatus = false }) {
+export function TaskCard({
+  task,
+  onClick,
+  onToggleComplete,
+  onStatusChange,
+  onEdit,
+  compact = false,
+  showQuickStatus = false,
+  statusBusy = false,
+}) {
+  const { can } = useAuth();
   const done = isTaskDone(task);
   const overdue = isOverdue(task) && !done;
-  const canQuickStatus = showQuickStatus && onStatusChange && !(task.is_recurring && task._occurrenceDate);
+  const canEdit = Boolean(onEdit) && can('manageTasks');
+  const canChangeStatus = Boolean(onStatusChange) && can('changeAnyStatus');
 
   return (
     <motion.article
@@ -61,24 +71,15 @@ export function TaskCard({ task, onClick, onToggleComplete, onStatusChange, comp
                 {task.title}
               </h3>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {canQuickStatus ? (
-                <StatusQuickSelect value={task.status} onChange={(status) => onStatusChange(task, status)} />
-              ) : (
-                <StatusBadge task={task} />
-              )}
-              <button
-                type="button"
-                className="touch-target rounded-lg text-success hover:bg-success/10"
-                aria-label="Enviar por WhatsApp"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openWhatsAppShare(task);
-                }}
-              >
-                <MessageCircle className="w-4 h-4" />
-              </button>
-            </div>
+            <TaskCardActions
+              task={task}
+              onStatusChange={onStatusChange}
+              onEdit={onEdit}
+              showQuickStatus={showQuickStatus}
+              canChangeStatus={canChangeStatus}
+              canEdit={canEdit}
+              statusBusy={statusBusy}
+            />
           </div>
 
           {!compact && (
