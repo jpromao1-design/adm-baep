@@ -81,14 +81,18 @@ Rode `supabase/link-auth-users.sql`, `supabase/migration-secao-auxiliar.sql`, `s
 
 O auxiliar Sargento Souza (`rogeriopolmil@gmail.com`) entra com a senha inicial e é obrigado a alterar antes de usar o sistema. A senha nova é gravada com hash pelo Authentication do Supabase.
 
-## 7. Dashboard — status e edição nos cards (v1.2.0)
+## 7. Dashboard — status e edição nos cards (v1.2.0+)
 
 Nos cards do Dashboard (e na lista mobile de Tarefas):
 
 - o **badge de status** abre um menu com os status do banco: `pendente`, `em_andamento`, `aguardando`, `concluido` (rótulos: Pendente, Em andamento, Aguardando, Concluída);
 - o ícone de **lápis** abre o mesmo `TaskFormModal` usado nas demais telas;
-- o **WhatsApp** permanece inalterado;
+- o **WhatsApp** usa `buildWhatsAppMessage` / `openWhatsAppShare` (`src/lib/whatsapp.js`) — mensagem institucional sem URL do sistema;
 - a atualização usa `updateTask` via `handleStatusChange` / `handleSave` (TanStack Query), com invalidação da query `tasks` e toast de feedback;
 - permissões de UI: `changeAnyStatus` e `manageTasks` (`src/lib/permissions.js`); a segurança efetiva continua na RLS do Supabase.
 
 Não há `service_role` no frontend.
+
+## 8. WhatsApp (v1.2.1)
+
+Compartilhamento centralizado em `src/lib/whatsapp.js`. A mensagem usa negrito do WhatsApp (`*texto*`), omite campos vazios e **não inclui** o endereço do Adm BAEP. A abertura continua via `https://wa.me/?text=...`.

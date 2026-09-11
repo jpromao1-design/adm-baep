@@ -1,54 +1,93 @@
 import { TYPE_LABELS, STATUS_CONFIG } from './task-status';
 import { formatDate, getTaskDate } from './dates';
 import { getAuxiliar } from './sections';
-import { getDeadlineInfo } from './deadline';
 
+const TYPE_EMOJI = {
+  demanda: '📌',
+  tarefa: '📋',
+  evento: '📅',
+  compromisso: '📅',
+};
+
+function typeHeader(type) {
+  const label = (TYPE_LABELS[type] || type || 'Tarefa').toUpperCase();
+  const emoji = TYPE_EMOJI[type] || '📋';
+  return `${emoji} *${label} — 8º BAEP*`;
+}
+
+function observationText(task) {
+  const parts = [task.description, task.observations, task.notes]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+  const unique = [...new Set(parts)];
+  if (!unique.length) return '';
+  return unique.join('\n').slice(0, 500);
+}
+
+/** Mensagem institucional para compartilhar tarefa/demanda no WhatsApp (sem URL do sistema). */
 export function buildWhatsAppMessage(task) {
   if (!task) return '';
-  const lines = [
-    `*Adm BAEP* — ${TYPE_LABELS[task.type] || task.type}`,
-    '',
-    `*Título:* ${task.title || '—'}`,
-  ];
 
-  if (task.status) {
-    lines.push(`*Status:* ${STATUS_CONFIG[task.status]?.label || task.status}`);
+  const lines = [typeHeader(task.type), ''];
+
+  const title = String(task.title || '').trim();
+  if (title) {
+    lines.push(`*${title}*`);
+    lines.push('');
   }
-  if (task.section) lines.push(`*Seção:* ${task.section}`);
 
   const dateStr = getTaskDate(task);
   if (dateStr) {
-    const deadline = getDeadlineInfo(task);
-    lines.push(`*Prazo:* ${formatDate(dateStr)}${deadline?.label ? ` (${deadline.label})` : ''}`);
-  }
-  if (task.event_time) lines.push(`*Horário:* ${task.event_time}`);
-  if (task.location) lines.push(`*Local:* ${task.location}`);
-
-  const auxiliar = getAuxiliar(task);
-  if (auxiliar) lines.push(`*Auxiliar:* ${auxiliar}`);
-
-  if (task.description) {
-    const desc = String(task.description).trim().slice(0, 400);
-    lines.push('', `*Descrição:* ${desc}`);
-  }
-  if (task.observations) {
-    lines.push(`*Obs.:* ${String(task.observations).trim().slice(0, 200)}`);
+    const formatted = formatDate(dateStr);
+    if (formatted) lines.push(`📅 *Prazo:* ${formatted}`);
   }
 
-  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  if (origin && task.id) {
-    lines.push('', `Registro: ${origin}${base}/tasks`);
+  if (task.status) {
+    const statusLabel = STATUS_CONFIG[task.status]?.label || task.status;
+    lines.push(`⏳ *Status:* ${statusLabel}`);
   }
+
+  if (task.priority) {
+    lines.push(`🎯 *Prioridade:* ${String(task.priority).trim()}`);
+  }
+
+  const responsavel = getAuxiliar(task);
+  if (responsavel) lines.push(`👤 *Responsável:* ${responsavel}`);
+
+  if (task.section) {
+    lines.push(`🏢 *Seção:* ${String(task.section).trim()}`);
+  }
+
+  if (task.event_time) {
+    lines.push(`🕒 *Horário:* ${String(task.event_time).trim()}`);
+  }
+
+  if (task.location) {
+    lines.push(`📍 *Local:* ${String(task.location).trim()}`);
+  }
+
+  const observation = observationText(task);
+  if (observation) {
+    lines.push('', '📝 *Observação:*', observation);
+  }
+
+  lines.push('', '──────────────────', '🛡️ *8º BAEP*');
 
   return lines.join('\n');
 }
 
-export function openWhatsAppShare(task, phone = '') {
+/** Alias compatível com a API pedida na especificação. */
+export const formatTaskWhatsAppMessage = buildWhatsAppMessage;
+
+export function buildWhatsAppShareUrl(task, phone = '') {
   const text = buildWhatsAppMessage(task);
   const digits = String(phone || '').replace(/\D/g, '');
-  const url = digits
+  return digits
     ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}`
     : `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+export function openWhatsAppShare(task, phone = '') {
+  const url = buildWhatsAppShareUrl(task, phone);
   window.open(url, '_blank', 'noopener,noreferrer');
 }
