@@ -21,7 +21,16 @@ export function TaskCardActions({
   const canQuickStatus = showQuickStatus && canChangeStatus && onStatusChange && !isOccurrence;
 
   return (
-    <div className={cn('flex items-center gap-1 shrink-0', className)} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={cn(
+        // Mobile: coluna à direita — status → lápis → WhatsApp
+        'flex flex-col items-end gap-1.5 shrink-0',
+        // Desktop: linha horizontal (layout anterior)
+        'md:flex-row md:items-center md:gap-1',
+        className
+      )}
+      onClick={(e) => e.stopPropagation()}
+    >
       {canQuickStatus ? (
         <StatusQuickSelect
           value={task.status}
@@ -37,7 +46,7 @@ export function TaskCardActions({
           type="button"
           title="Editar"
           aria-label={editAriaLabel(task)}
-          className="touch-target rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="touch-target min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onClick={(e) => {
             e.stopPropagation();
             onEdit(task);
@@ -51,7 +60,7 @@ export function TaskCardActions({
         <button
           type="button"
           title="WhatsApp"
-          className="touch-target rounded-lg text-success hover:bg-success/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="touch-target min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg text-success hover:bg-success/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Enviar por WhatsApp"
           onClick={(e) => {
             e.stopPropagation();

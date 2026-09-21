@@ -58,10 +58,21 @@ export function DeadlineCard({
         'transition-all active:scale-[0.99] hover:border-border focus-ring'
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-          {TYPE_LABELS[task.type] || task.type}
-        </p>
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+            {TYPE_LABELS[task.type] || task.type}
+          </p>
+          <p className="text-sm font-semibold text-foreground mt-1 line-clamp-2 leading-snug">{task.title}</p>
+          <div className={cn('flex items-center gap-1.5 mt-2.5 text-xs font-semibold', tone)}>
+            <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+            <span>
+              {info.label}
+              {dateShort && ` · ${dateShort}`}
+            </span>
+          </div>
+          {auxiliar && <p className="text-xs text-muted-foreground mt-1.5 truncate">{auxiliar}</p>}
+        </div>
         <TaskCardActions
           task={task}
           onStatusChange={onStatusChange}
@@ -70,18 +81,8 @@ export function DeadlineCard({
           canChangeStatus={canChangeStatus}
           canEdit={canEdit}
           statusBusy={statusBusy}
-          className="scale-95 origin-top-right"
         />
       </div>
-      <p className="text-sm font-semibold text-foreground mt-1 line-clamp-2 leading-snug">{task.title}</p>
-      <div className={cn('flex items-center gap-1.5 mt-2.5 text-xs font-semibold', tone)}>
-        <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-        <span>
-          {info.label}
-          {dateShort && ` · ${dateShort}`}
-        </span>
-      </div>
-      {auxiliar && <p className="text-xs text-muted-foreground mt-1.5 truncate">{auxiliar}</p>}
     </div>
   );
 }
