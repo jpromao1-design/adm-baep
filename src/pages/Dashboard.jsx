@@ -20,7 +20,7 @@ import { useTaskModals } from '@/hooks/useTaskModals';
 import { useToggleComplete } from '@/hooks/useToggleComplete';
 import { checkAndNotifyTasks, requestNotificationPermission } from '@/lib/notifications';
 import { expandRecurringTasks, isOccurrenceCompleted } from '@/lib/recurrence';
-import { getTaskDate, toDateStr, todayStr, formatDateLong } from '@/lib/dates';
+import { getTaskDate, parseDateOnly, toDateStr, todayStr, formatDateLong } from '@/lib/dates';
 import { isOverdue } from '@/lib/task-status';
 
 export default function Dashboard() {
@@ -68,11 +68,20 @@ export default function Dashboard() {
         return;
       }
       const existing = overdueMap.get(t.id);
-      if (!existing || new Date(getTaskDate(t)) > new Date(getTaskDate(existing))) overdueMap.set(t.id, t);
+      const nextDue = parseDateOnly(getTaskDate(t));
+      const prevDue = existing ? parseDateOnly(getTaskDate(existing)) : null;
+      if (!existing || (nextDue && prevDue && nextDue > prevDue) || (nextDue && !prevDue)) {
+        overdueMap.set(t.id, t);
+      }
     });
-    const overdueTasks = [...overdueMap.values()].sort(
-      (a, b) => new Date(getTaskDate(a)) - new Date(getTaskDate(b))
-    );
+    const overdueTasks = [...overdueMap.values()].sort((a, b) => {
+      const ad = parseDateOnly(getTaskDate(a));
+      const bd = parseDateOnly(getTaskDate(b));
+      if (!ad && !bd) return 0;
+      if (!ad) return 1;
+      if (!bd) return -1;
+      return ad - bd;
+    });
 
     const todayItems = notDone.filter((t) => getTaskDate(t) === todayKey);
     const eventsToday = todayItems.filter((t) => t.type === 'evento' || t.type === 'compromisso');

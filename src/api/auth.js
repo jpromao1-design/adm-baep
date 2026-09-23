@@ -7,8 +7,12 @@ export async function requirePasswordChange() {
 }
 
 export async function completePasswordChange() {
-  const { error } = await supabase.rpc('set_must_change_password', { p_required: false });
-  if (error) throw error;
+  const { error } = await supabase.rpc('complete_password_change');
+  if (error) {
+    // Compatibilidade: bases que ainda só têm set_must_change_password(false)
+    const fallback = await supabase.rpc('set_must_change_password', { p_required: false });
+    if (fallback.error) throw error;
+  }
 }
 
 export async function changePassword({ email, currentPassword, newPassword, confirmPassword }) {
@@ -31,9 +35,14 @@ export async function changePassword({ email, currentPassword, newPassword, conf
   const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
   if (updateError) throw new Error(updateError.message);
 
-  await completePasswordChange().catch(() => {
-    // Flag persistida após migration-password-change.sql
-  });
+  try {
+    await completePasswordChange();
+  } catch (err) {
+    throw new Error(
+      err?.message
+        || 'Senha alterada no Auth, mas a flag de troca obrigatória não foi limpa. Contate o administrador.'
+    );
+  }
   return { ok: true };
 }
 

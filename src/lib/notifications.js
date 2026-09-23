@@ -1,4 +1,4 @@
-import { daysUntil, getTaskDate } from './dates';
+import { daysUntil, getTaskDate, todayStr } from './dates';
 import { isTaskDone } from './task-status';
 
 const STORAGE_KEY = 'adm-baep-notif-sent';
@@ -12,7 +12,7 @@ function loadSent() {
 }
 
 function saveSent(set) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
   const kept = [...set].filter((k) => k.startsWith(today) || k.split('|')[0] === today);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(kept.slice(-200)));
 }
@@ -30,7 +30,7 @@ export function checkAndNotifyTasks(tasks) {
   if (Notification.permission !== 'granted') return;
 
   const sent = loadSent();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
 
   for (const task of tasks) {
     if (isTaskDone(task) || task.status === 'concluido') continue;

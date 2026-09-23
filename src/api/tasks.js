@@ -14,6 +14,10 @@ const TYPES = ['tarefa', 'demanda', 'evento', 'compromisso'];
 const STATUSES = ['pendente', 'em_andamento', 'aguardando', 'concluido'];
 const SECTIONS = ['P1', 'P3', 'P5'];
 
+export function isValidTaskStatus(status) {
+  return typeof status === 'string' && STATUSES.includes(status);
+}
+
 export function isDomOrEvent(value) {
   if (!value || typeof value !== 'object') return false;
   if (typeof value.preventDefault === 'function') return true;
@@ -167,7 +171,12 @@ export async function updateTask(id, input) {
   let patch;
   if (input && !Object.prototype.hasOwnProperty.call(input, 'title')) {
     patch = {};
-    if (typeof input.status === 'string') patch.status = input.status;
+    if (typeof input.status === 'string') {
+      if (!isValidTaskStatus(input.status)) {
+        throw new Error('Status inválido.');
+      }
+      patch.status = input.status;
+    }
     if (Array.isArray(input.completed_occurrences)) {
       patch.completed_occurrences = input.completed_occurrences.filter((item) => typeof item === 'string');
     }

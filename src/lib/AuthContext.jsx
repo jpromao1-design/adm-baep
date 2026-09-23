@@ -154,7 +154,10 @@ export function AuthProvider({ children }) {
     const result = await updatePassword(payload);
     forcePasswordChangeRef.current = false;
     const { data } = await supabase.auth.getUser();
-    await loadProfile(data.user);
+    const { profile: next } = await loadProfile(data.user);
+    if (next?.must_change_password) {
+      throw new Error('Senha atualizada, mas a troca obrigatória permanece ativa. Execute a migration fix-015 no Supabase.');
+    }
     return result;
   }, [loadProfile]);
 

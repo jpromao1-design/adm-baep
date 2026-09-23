@@ -19,7 +19,7 @@ import { InstallPWA } from '@/components/layout/InstallPWA';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 
 function AuthenticatedApp() {
-  const { isLoadingAuth, isAuthenticated, authError, mustChangePassword, isAdmin } = useAuth();
+  const { isLoadingAuth, isAuthenticated, mustChangePassword, isAdmin } = useAuth();
 
   if (isLoadingAuth) {
     return <LoadingState label="Verificando acesso…" />;
@@ -33,10 +33,6 @@ function AuthenticatedApp() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
-  }
-
-  if (authError?.type === 'user_not_registered') {
-    return <Login />;
   }
 
   if (mustChangePassword) {

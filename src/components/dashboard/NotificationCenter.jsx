@@ -5,6 +5,7 @@ import { Bell, CheckCheck, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { listNotifications, markAllNotificationsRead, markNotificationRead } from '@/api/notifications';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/toaster';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { requestNotificationPermission } from '@/lib/notifications';
@@ -22,8 +23,13 @@ export function NotificationCenter({ tasks = [] }) {
     try {
       const rows = await listNotifications();
       setItems(rows);
-    } catch {
+    } catch (err) {
       setItems([]);
+      toast({
+        title: 'Não foi possível carregar notificações',
+        description: err?.message,
+        tone: 'danger',
+      });
     } finally {
       setLoading(false);
     }

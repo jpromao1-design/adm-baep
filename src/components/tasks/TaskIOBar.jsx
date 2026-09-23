@@ -2,10 +2,15 @@ import React, { useRef, useState } from 'react';
 import { Download, FileSpreadsheet, Upload } from 'lucide-react';
 import { exportTasksCsv, exportTasksXlsx, parseImportFile, validateImportRows } from '@/lib/task-io';
 import { toast } from '@/components/ui/toaster';
+import { useAuth } from '@/lib/AuthContext';
 
 export function TaskIOBar({ tasks, onImport }) {
+  const { can } = useAuth();
   const inputRef = useRef(null);
   const [busy, setBusy] = useState(false);
+  const canIo = can('importExport');
+
+  if (!canIo) return null;
 
   const runImport = async (file) => {
     if (!file) return;

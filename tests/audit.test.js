@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { toTaskRow, isDomOrEvent } from '../src/api/tasks.js';
-import { parseDateOnly, toDateStr, formatDateShort } from '../src/lib/dates.js';
+import { toTaskRow, isDomOrEvent, isValidTaskStatus } from '../src/api/tasks.js';
+import { parseDateOnly, toDateStr, formatDateShort, todayStr } from '../src/lib/dates.js';
 import { evaluatePassword } from '../src/lib/password.js';
 
 describe('isDomOrEvent', () => {
@@ -39,6 +39,21 @@ describe('toTaskRow', () => {
   });
 });
 
+describe('isValidTaskStatus', () => {
+  it('aceita status do banco', () => {
+    expect(isValidTaskStatus('pendente')).toBe(true);
+    expect(isValidTaskStatus('em_andamento')).toBe(true);
+    expect(isValidTaskStatus('aguardando')).toBe(true);
+    expect(isValidTaskStatus('concluido')).toBe(true);
+  });
+
+  it('rejeita status inválidos ou só de UI', () => {
+    expect(isValidTaskStatus('atrasado')).toBe(false);
+    expect(isValidTaskStatus('')).toBe(false);
+    expect(isValidTaskStatus(null)).toBe(false);
+  });
+});
+
 describe('parseDateOnly', () => {
   it('parseia yyyy-MM-dd no fuso local', () => {
     const d = parseDateOnly('2026-08-21');
@@ -49,6 +64,12 @@ describe('parseDateOnly', () => {
 
   it('formata de volta sem deslocar dia', () => {
     expect(toDateStr(parseDateOnly('2026-08-21'))).toBe('2026-08-21');
+  });
+
+  it('todayStr usa data local (não UTC ISO)', () => {
+    const t = todayStr();
+    expect(t).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(t).toBe(toDateStr(new Date()));
   });
 });
 

@@ -96,3 +96,13 @@ Não há `service_role` no frontend.
 ## 8. WhatsApp (v1.2.1)
 
 Compartilhamento centralizado em `src/lib/whatsapp.js`. A mensagem usa negrito do WhatsApp (`*texto*`), omite campos vazios e **não inclui** o endereço do Adm BAEP. A abertura continua via `https://wa.me/?text=...`.
+
+## 9. Segurança (v1.2.2 — Commit 015)
+
+Após as migrations de usuários, execute também:
+
+`supabase/fix-015-security-hardening.sql`
+
+Isso restringe SELECT/UPDATE de `profiles`, impede elevação de `role`/`active` pelo próprio usuário, limita `notify_user` a admin e separa a limpeza da flag `must_change_password` em `complete_password_change()`.
+
+**Atenção operacional:** aprovar solicitação de acesso autoriza o e-mail, mas o usuário Auth ainda precisa ser criado no Dashboard do Supabase (senha inicial `123mudar`).

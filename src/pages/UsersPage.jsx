@@ -282,10 +282,14 @@ export default function UsersPage() {
                     size="sm"
                     onClick={async () => {
                       try {
-                        await approveAccessRequest(r.id, 'auxiliar');
+                        const role =
+                          r.role_requested === 'admin' || r.role_requested === 'auxiliar'
+                            ? r.role_requested
+                            : 'auxiliar';
+                        await approveAccessRequest(r.id, role);
                         toast({
                           title: 'Solicitação aprovada',
-                          description: 'E-mail autorizado. Crie o usuário no Auth do Supabase com senha 123mudar.',
+                          description: `E-mail autorizado como ${role}. Crie o usuário no Auth do Supabase (senha inicial 123mudar).`,
                           tone: 'success',
                         });
                         await reload();
