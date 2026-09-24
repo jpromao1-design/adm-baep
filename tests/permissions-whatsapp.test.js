@@ -49,7 +49,8 @@ describe('whatsapp message', () => {
     expect(msg).toContain('🏢 *Seção:* P3');
     expect(msg).toContain('📝 *Observação:*');
     expect(msg).toContain('Providenciar atualização');
-    expect(msg).toContain('🛡️ *8º BAEP*');
+    expect(msg).toContain('*8º BAEP*');
+    expect(msg).not.toContain('🛡️');
   });
 
   it('omite campos vazios e não inclui undefined/null', () => {
@@ -112,10 +113,9 @@ describe('whatsapp message', () => {
       description: 'Atenção: atualização até às 17h com acentuação (ção, ã, é).',
     });
     expect(msg).toContain('8º BAEP');
-    expect(msg).toContain('ã');
-    expect(msg).toContain('é');
     expect(msg).toContain('📌');
-    expect(msg).toContain('🛡️');
+    expect(msg).not.toContain('🛡️');
+    expect(msg).toContain('*8º BAEP*');
   });
 
   it('diferencia DEMANDA e TAREFA no cabeçalho', () => {

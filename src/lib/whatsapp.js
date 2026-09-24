@@ -9,6 +9,9 @@ const TYPE_EMOJI = {
   compromisso: '📅',
 };
 
+/** Caminho público do brasão oficial do 8º BAEP (vai junto no compartilhamento). */
+export const BRASAO_8BAEP_PATH = 'brasao-8baep.png';
+
 function typeHeader(type) {
   const label = (TYPE_LABELS[type] || type || 'Tarefa').toUpperCase();
   const emoji = TYPE_EMOJI[type] || '📋';
@@ -22,6 +25,11 @@ function observationText(task) {
   const unique = [...new Set(parts)];
   if (!unique.length) return '';
   return unique.join('\n').slice(0, 500);
+}
+
+function brasaoPublicUrl() {
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
+  return `${base}${BRASAO_8BAEP_PATH}`;
 }
 
 /** Mensagem institucional para compartilhar tarefa/demanda no WhatsApp (sem URL do sistema). */
@@ -71,7 +79,8 @@ export function buildWhatsAppMessage(task) {
     lines.push('', '📝 *Observação:*', observation);
   }
 
-  lines.push('', '──────────────────', '🛡️ *8º BAEP*');
+  // Rodapé institucional — sem emoji de escudo genérico (brasão oficial vai como imagem no share).
+  lines.push('', '──────────────────', '*8º BAEP*');
 
   return lines.join('\n');
 }
@@ -87,7 +96,44 @@ export function buildWhatsAppShareUrl(task, phone = '') {
     : `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
-export function openWhatsAppShare(task, phone = '') {
+async function tryShareWithBrasao(text) {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  if (typeof navigator.share !== 'function') return false;
+
+  const response = await fetch(brasaoPublicUrl());
+  if (!response.ok) return false;
+
+  const blob = await response.blob();
+  const file = new File([blob], BRASAO_8BAEP_PATH, { type: blob.type || 'image/png' });
+
+  if (typeof navigator.canShare === 'function' && !navigator.canShare({ files: [file] })) {
+    return false;
+  }
+
+  const payload = { files: [file], text, title: '8º BAEP' };
+  if (typeof navigator.canShare === 'function' && !navigator.canShare(payload)) {
+    return false;
+  }
+
+  try {
+    await navigator.share(payload);
+    return true;
+  } catch (err) {
+    if (err?.name === 'AbortError') return true;
+    return false;
+  }
+}
+
+export async function openWhatsAppShare(task, phone = '') {
+  const text = buildWhatsAppMessage(task);
+
+  // No celular, tenta enviar o brasão oficial junto com o texto (Web Share API).
+  try {
+    if (await tryShareWithBrasao(text)) return;
+  } catch {
+    /* fallback wa.me */
+  }
+
   const url = buildWhatsAppShareUrl(task, phone);
   window.open(url, '_blank', 'noopener,noreferrer');
 }
